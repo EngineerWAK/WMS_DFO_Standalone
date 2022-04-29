@@ -23,6 +23,15 @@ in CfgRemoteExec.sqf :
 ```
 class CfgRemoteExec
 {
+	class EventCustom
+	{
+		title = "%1";
+		description = "%2";
+		iconPicture = "%3";
+		color[] = {0.85,0.4,0,1}; //Orange
+		duration = 5;
+		priority = 3;
+	};
 	class Functions
 	{
 		mode = 1;
