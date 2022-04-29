@@ -10,8 +10,25 @@ v0.1_2022APR29_GitHub<br/>
 	3-Build and test each mission one by one
 	4-Export a Standalone version
 
+Note that "Standalone" Version doesn't include any mission.sqm, you need your own (basically to spawn/respawn).
+If you have nothing: 
+launch arma3,<br/>
+Open mission Editor,<br/>
+Choose your map, (for example Altis)<br/>
+Put a dude on the ground, (BLUFOR, otherwise you are going to get in trouble)<br/>
+Save your mission:<br/>
+Scenario/Save As.../MPMissions/MyAmazingMission (DO NOT BINARIZE)<br/>
+ALT/TAB to your file explorer<br/>
+Open: Documents\Arma 3 - Other Profiles\"YOURPROFILENAME"\mpmissions\MyAmazingMission.Altis<br/>
+Copy and past CfgRemoteExec.sqf (not needed in local but do it), InitServer.sqf, Description.ext and WMS_DFO_Functions.sqf<br/>
+ALT/TAB back to arma<br/>
+Click Play/Play In MultiPlayer (MP)<br/>
+Click on your dude in Alpha 1-1, OK (Bottom right), Continue<br/>
+Look at the map, fint the "DFO" Marker and "ALT/Left click" yourself there (teleport)<br/>
+Call the mission from the screen, done.<br/>
+At this point you do not have a respawn system but it does the job.<br/>
 
-You can launch it from:<br/>
+You can launch WMS_DFO_Standalone from:<br/>
 WMS_initSystem (WMS_InfantryProgram, not Standalone).<br/>
 or<br/>
 in initServer:
