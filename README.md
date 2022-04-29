@@ -12,7 +12,7 @@ v0.1_2022APR29_GitHub<br/>
 
 Note that "Standalone" Version doesn't include any mission.sqm, you need your own (basically to spawn/respawn).<br/>
 If you have nothing: <br/>
-launch arma3,<br/>
+Launch arma3,<br/>
 Open mission Editor,<br/>
 Choose your map, (for example Altis)<br/>
 Put a dude on the ground, (BLUFOR, otherwise you are going to get in trouble)<br/>
@@ -27,6 +27,16 @@ Click on your dude in Alpha 1-1, OK (Bottom right), Continue<br/>
 Look at the map, fint the "DFO" Marker and "ALT/Left click" yourself there (teleport)<br/>
 Call the mission from the screen, done.<br/>
 At this point you do not have a respawn system but it does the job.<br/>
+
+If you are building a mission.sqm:<br/>
+Place your DFO Mission Object (where to call mission from, for exemple "Land_TripodScreen_01_large_F") and in the init, add:<br/>
+```
+private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []];
+_ObjToAddAction pushBack _this;
+missionNameSpace setVariable ["WMS_DFO_ObjToAddAction",_ObjToAddAction];
+```
+Next to the DFO Object, place an Helipad (not "Land_HelipadEmpty_F")<br/>
+You can have as many DFO Object as you want.<br/>
 
 If you already have a Mission.sqm:<br/>
 You can launch WMS_DFO_Standalone from:<br/>
