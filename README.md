@@ -17,41 +17,43 @@ or initServer:<br/>
 if (true)then {execVM "WMS_DFO_functions.sqf"};<br/>
 On dedicated server you need:
 in CfgRemoteExec.sqf :
-	class CfgRemoteExec
+```
+class CfgRemoteExec
+{
+	class Functions
 	{
-		class Functions
-		{
-			mode = 1;
-			jip = 0;
-			class WMS_fnc_Event_DFO	{ allowedTargets=2; };
-		};
-		class Commands
-		{
-			mode=0;
-			jip=0;
-		};
+		mode = 1;
+		jip = 0;
+		class WMS_fnc_Event_DFO	{ allowedTargets=2; };
 	};
+	class Commands
+	{
+		mode=0;
+		jip=0;
+	};
+};
+```
 in Description.ext :
-	class CfgNotifications
+```
+class CfgNotifications
+{
+	class TaskSucceeded
 	{
-		class TaskSucceeded
-		{
-			title = "%1";
-			iconPicture = "\A3\ui_f\data\map\MapControl\taskicondone_ca.paa";
-			description = "%2";
-			duration = 5; //
-			priority = 7;
-		};
-		class TaskFailed
-		{
-			title = "%1";
-			iconPicture = "\A3\ui_f\data\map\MapControl\taskiconfailed_ca.paa";
-			description = "%2";
-			priority = 6;
-		};
+		title = "%1";
+		iconPicture = "\A3\ui_f\data\map\MapControl\taskicondone_ca.paa";
+		description = "%2";
+		duration = 5;
+		priority = 7;
 	};
-
-
+	class TaskFailed
+	{
+		title = "%1";
+		iconPicture = "\A3\ui_f\data\map\MapControl\taskiconfailed_ca.paa";
+		description = "%2";
+		priority = 6;
+	};
+};
+```
 ## License
 
 &copy; 2022 {|||TNA|||}WAKeupneo
