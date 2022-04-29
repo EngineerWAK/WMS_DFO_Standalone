@@ -28,6 +28,7 @@ Look at the map, fint the "DFO" Marker and "ALT/Left click" yourself there (tele
 Call the mission from the screen, done.<br/>
 At this point you do not have a respawn system but it does the job.<br/>
 
+If you already have a Mission.sqm:
 You can launch WMS_DFO_Standalone from:<br/>
 WMS_initSystem (WMS_InfantryProgram, not Standalone).<br/>
 or<br/>
