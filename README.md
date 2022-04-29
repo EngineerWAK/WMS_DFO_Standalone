@@ -10,8 +10,8 @@ v0.1_2022APR29_GitHub<br/>
 	3-Build and test each mission one by one
 	4-Export a Standalone version
 
-Note that "Standalone" Version doesn't include any mission.sqm, you need your own (basically to spawn/respawn).
-If you have nothing: 
+Note that "Standalone" Version doesn't include any mission.sqm, you need your own (basically to spawn/respawn).<br/>
+If you have nothing: <br/>
 launch arma3,<br/>
 Open mission Editor,<br/>
 Choose your map, (for example Altis)<br/>
