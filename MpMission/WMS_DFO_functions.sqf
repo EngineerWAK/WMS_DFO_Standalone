@@ -24,7 +24,7 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.11_2022APR29_GitHub";
+WAK_DFO_Version			= "v0.12_2022APR29_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics, still working on "airassault"
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -355,21 +355,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_selectedChoppers = WMS_DFO_Choppers select 2;
 			if (_missionStart == "BASE") then {_missionFinish = _MissionPath select 1} else {_missionFinish = _MissionPath select 2};
 		};
-		case "airassault" : { //destroy target or capture zone
-			//_posType 		= ["random","buildings","military"]; //"random","forest","sea","buildings","military" //NOT YET
-			_missionName 	= "Air Assault";
-			_createCIVinf 	= true; //military at _MissionStart or civilian at _MissionFinish or both ?
-			//_civType 		= "armed"; //only military for now //KEEP DEFAULT!
-			_createOPFORinf = true;
-			_createOPFORvhl = true; //light/APC
-			_OPFORvhlType 	= [4,5];//[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"]]
-			_OPFORvhlCnt 	= selectRandom [1,2];
-			_selectedChoppers = WMS_DFO_Choppers select 1;//[["pylons"],["doorGunners"],["transport"],["medevac"]];
-			if("LZ2" in _MissionPath) then {
-				_MissionStart = "LZ1"; //pickup
-				_MissionFinish = "LZ2"; //drop/cover //those dudes will probably beed to be BLUFOR to be able to do something...
-			};
-		};
 		case "casinf" : { //mission (LZ1) succes wen target destroyed, No RTB/LZ2
 			_missionName 	= "CAS Infantry";
 			_MissionStart 	= "LZ1";
@@ -407,7 +392,25 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createCIVinf 	= true; //not armed
 			_createOPFORvhl = true; //light
 			_OPFORvhlType 	= [5];
-			_selectedChoppers = WMS_DFO_Choppers select 1;
+			_selectedChoppers = [WMS_DFO_Choppers select 1 select 0];
+		};
+		case "airassault" : { //destroy target or capture zone
+			//_posType 		= ["random","buildings","military"]; //"random","forest","sea","buildings","military" //NOT YET
+			_missionName 	= "Air Assault";
+			_createCIVinf 	= true; //military at _MissionStart or civilian at _MissionFinish or both ?
+			//_civType 		= "armed"; //only military for now //KEEP DEFAULT!
+			_createOPFORinf = true;
+			_createOPFORvhl = true; //light/APC
+			_OPFORvhlType 	= [4,5];//[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"]]
+			_OPFORvhlCnt 	= selectRandom [1,2];
+			_selectedChoppers = WMS_DFO_Choppers select 0;//[["pylons"],["doorGunners"],["transport"],["medevac"]];
+			if("LZ2" in _MissionPath) then {
+				_MissionStart = "LZ1"; //pickup
+				_MissionFinish = "LZ2"; //drop/cover //those dudes will probably beed to be BLUFOR to be able to do something...
+			}else {
+				_MissionStart = "BASE"; //pickup
+				_MissionFinish = "LZ1"; //drop/cover //those dudes will probably beed to be BLUFOR to be able to do something...
+			};
 		};
 		case "maritime" : {_missionName = "If you see this, its fuckedUp";}; //this one will definitly need way more work
 	};
@@ -457,10 +460,15 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		//define what type of vehicle, depending what type of mission
 		if (surfaceIsWater _pos) then {_OPFORvhlType = [9]};
 		private _OPFvehicles = [];
+		private _veh = objNull;
 		for "_i" from 1 to _OPFORvhlCnt do {
 			private _vhlType = selectRandom _OPFORvhlType; //number from an array
 			private _vhlCN = selectRandom (WMS_DFO_NPCvehicles select _vhlType); ///classname from array in an array
-			private _veh = createVehicle [_vhlCN, _pos, [], 75, "NONE"];
+			if (_mission == "airassault") then {
+				_veh = createVehicle [_vhlCN, _MissionFinish, [], 75, "NONE"];
+			}else{
+				_veh = createVehicle [_vhlCN, _pos, [], 75, "NONE"];
+			};
 			_veh setDir (random 359);
 			_OPFvehicles pushback _veh;
 			(_vhls select 0) pushback _veh;
@@ -481,7 +489,16 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_OPFORinfGrp addvehicle _x;
 			(units _OPFORinfGrp) orderGetIn true;
 			(_grps select 0) pushback _OPFORinfGrp; //need a check on this one
-			[_OPFORinfGrp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
+			if (_mission == "airassault") then {
+				//[_OPFORinfGrp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
+				[_OPFORinfGrp] call CBA_fnc_taskDefend;
+				{
+					_x setVariable ["lambs_danger_disableAI", true];//deactivate LambsDanger
+				}forEach units _OPFORinfGrp;
+				_OPFORinfGrp setVariable ["lambs_danger_disableGroupAI", true];//deactivate LambsDanger
+			}else{
+				[_OPFORinfGrp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
+			};
 			[(units _OPFORinfGrp),[_MissionHexaID,_playerObject,_mission,_infType]] call WMS_fnc_DFO_SetUnits;
 		}forEach _OPFvehicles;
 	};
@@ -505,13 +522,14 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_loadoutsCIV = (WMS_DFO_NPCs select 2);
 			_infType = "CIV";
 		};
-		if (_mission == "airassault") then { //create a second group, armed
+		if (_mission == "airassault") then {
 			_CIVinfGrp = createGroup [CIVILIAN, false];
-			for "_i" from 1 to (selectRandom [2,4,6,8]) do {
+			for "_i" from 1 to (selectRandom [4,6,8]) do {
 				(selectRandom (WMS_DFO_NPCs select 2)) createUnit [_missionFinish, _CIVinfGrp];		
 			};
-			_CIVinfGrp2 = createGroup [BLUFOR, false];
-			for "_i" from 1 to (selectRandom [2,4,6,8]) do {
+			[_CIVinfGrp, _missionFinish, 75, 5, "MOVE", "CARELESS", "BLUE", "NORMAL", "DIAMOND", "", [1,2,3]] call CBA_fnc_taskPatrol;
+			_CIVinfGrp2 = createGroup [WEST, false];
+			for "_i" from 1 to (selectRandom [3,4,5,6]) do {
 				(selectRandom (WMS_DFO_NPCs select 1)) createUnit [_pos, _CIVinfGrp2];		
 			};
 			{
@@ -520,6 +538,12 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			}forEach units _CIVinfGrp2;
 			(_grps select 1) pushback _CIVinfGrp2;
 			_playerObject setVariable ["WMS_DFO_UnitsToManage", (units _CIVinfGrp2)];
+			if (WMS_DFO_Standalone) then {
+				[(units _CIVinfGrp2),[_MissionHexaID,_playerObject,"airassault","CIV_ARMED"]] call WMS_fnc_DFO_SetUnits;
+			} else {
+				//[(units _CIVinfGrp),'Random',100,WMS_Recon_Guards_Skill,"army"] call WMS_fnc_DynAI_SetUnitOPF; //NOPE not for now
+				[(units _CIVinfGrp2),[_MissionHexaID,_playerObject,"airassault","CIV_ARMED"]] call WMS_fnc_DFO_SetUnits;
+			};
 		}else{
 			_CIVinfGrp = createGroup [CIVILIAN, false];
 			for "_i" from 1 to (selectRandom [2,4,6,8]) do {
@@ -543,13 +567,21 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	//OPFOR
 	if (_createOPFORinf) then {
 		_infType = "OPFOR";
-		_OPFORinfGrp = createGroup [OPFOR, false];
-		for "_i" from 1 to (selectRandom [4,6,8,10]) do {
-			(selectRandom (WMS_DFO_NPCs select 0)) createUnit [_pos, _OPFORinfGrp];
+		_OPFORinfGrp = createGroup [EAST, false];
+		if (_mission == "airassault") then {
+			for "_i" from 1 to (selectRandom [4,6,8,10]) do {
+				(selectRandom (WMS_DFO_NPCs select 0)) createUnit [_MissionFinish, _OPFORinfGrp];
+			};
+			//[_OPFORinfGrp, _MissionFinish, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
+			[_OPFORinfGrp] call CBA_fnc_taskDefend; //GARRISON
+		}else{
+			for "_i" from 1 to (selectRandom [4,6,8,10]) do {
+				(selectRandom (WMS_DFO_NPCs select 0)) createUnit [_pos, _OPFORinfGrp];
+			};
+			[_OPFORinfGrp, _pos, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 		};
 		(_grps select 0) pushback _OPFORinfGrp;
 		[(units _OPFORinfGrp),[_MissionHexaID,_playerObject,_mission,_infType]] call WMS_fnc_DFO_SetUnits;
-		[_OPFORinfGrp, _pos, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 	};
 	//create mission/LZ marker
 	_mkrs = [_pos,_MissionStart,[_MissionHexaID,_playerObject,nil,_mission,_MissionPathCoord,_missionName,_MissionFinish]] call WMS_fnc_DFO_CreateMkr;
@@ -710,7 +742,11 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 	private _mkrName = format ["DFO_markerEnd_%1",time];
 	_MkrLZ = createMarker [_mkrName, _pos];
 	_MkrLZ setMarkerType (WMS_DFO_Markers select 1);
-	_MkrLZ setMarkerColor (WMS_DFO_MkrColors select 1);
+	if (_mission == 'airassault') then {
+		_MkrLZ setMarkerColor (WMS_DFO_MkrColors select 2);
+	} else {
+		_MkrLZ setMarkerColor (WMS_DFO_MkrColors select 1);
+	};
 	_MkrLZ setMarkerText format ["%1 %2",_missionName,(name _playerObject)];
 	private _playerVarMkr = missionNameSpace getVariable ["WMS_DFO_MarkerToDelete",[]];
 	_playerVarMkr pushBack [_MissionHexaID,_mkrName];
@@ -741,7 +777,6 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 			if (((vehicle _pilot) in thisList) && {(vehicle _pilot) isKindOf 'Helicopter'} && {speed _pilot < 15}) then {
 				if(_mission == 'sar' || _mission == 'csar' || _mission == 'airassault' || _mission == 'inftransport') then {[vehicle _pilot, _pilot] call WMS_fnc_DFO_infUnLoad};
 				_datas call WMS_fnc_DFO_CallForCleanup;
-				deleteMarker (_datas select 2);
 				deleteVehicle thisTrigger;
 			}else{
 				'Dynamic Flight Ops, Do not Park here' remoteExec ['hint', (owner (thisList select 0))];
@@ -845,7 +880,7 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 				[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)]; //NEED TO CHANGE THIS FOR STANDALONE 
 			};
 			//[format ["KIA %1, %2M AWAY, %3 ", toUpper(name _killed)],_dist, (side _killed)] remoteExecCall ['SystemChat',_killer];
-			[format ["KIA %1, %2M AWAY, %3 ", toUpper(name _killed),_dist, (side _killed)]] remoteExec ['SystemChat',(owner _killer)];
+			[format ["Killed %1, %2m away, %3 ", (name _killed),_dist, (side _killed)]] remoteExec ['SystemChat',(owner _killer)];
 
 		} else {
 			removeAllItems _killed;
@@ -885,7 +920,11 @@ WMS_fnc_DFO_infLoad = { //easy way: _unit moveInCargo _chopper;
 	if (surfaceIsWater (position _vehiceObject)) then {
 		{_x moveInCargo _vehiceObject}forEach _units;
 	}else {
-		_Units orderGetIn true;
+		if (side (_units select 0) == WEST ) then { //That would be "airassault"
+			{_x moveInAny _vehiceObject}forEach _units;
+		}else{
+			_Units orderGetIn true;
+		};
 	};	
 }; 
 WMS_fnc_DFO_infUnLoad = { //easy way: moveOut _unit;
@@ -926,7 +965,7 @@ WMS_fnc_DFO_Cleanup = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Cleanup _this %1', _this]};
 	private [
 		"_timeToDelete","_grpArrays","_grpOPFOR","_grpCIV","_vhl","_vhlOPFOR","_vhlCIV","_obj","_mkr","_cargo",
-		"_options","_MissionFinish","_succes","_cntOPFOR","_cntVhlOPFOR","_cntCIV","_playerObject"
+		"_passenger","_options","_MissionFinish","_succes","_cntOPFOR","_cntVhlOPFOR","_cntCIV","_playerObject"
 		];
 	_timeToDelete = (_this select 1);
 	_grpArrays = (_this select 2); //[[],[]]
@@ -945,11 +984,13 @@ WMS_fnc_DFO_Cleanup = {
 	_cntOPFOR = 0;
 	_cntVhlOPFOR = 0;
 	_cntCIV = 0;
+	_passenger = 0;
 	{
 		_cntOPFOR = _cntOPFOR + ({alive _x} count units _x);
 	} foreach _grpOPFOR;
 	{
 		_cntCIV = _cntCIV + ({alive _x} count units _x);
+		_passenger = _cntCIV + ({vehicle _x != _x} count units _x);
 	} foreach _grpCIV;
 	switch (_options select 2) do {
 		case "inftransport": { //CIV Alive at _MissionFinish, _cntCIV != 0
@@ -958,19 +999,19 @@ WMS_fnc_DFO_Cleanup = {
 		case "cargotransport": { //_cargo at _MissionFinish, alive _cargo
 			if(alive _cargo && {(position _cargo) distance _MissionFinish < 12.5}) then {_succes = true};
 		};
-		case "airassault": { //destroy target or capture zone at _MissionFinish, _cntOPFOR = 0, _vhlOPFOR != alive //the capture will do a "call for Cleanup/victory"
-			if (count _vhlOPFOR != 0) then {
-				{if(alive _x)then{_cntVhlOPFOR = _cntVhlOPFOR+1}}forEach _vhlOPFOR;
-			};
-			if(_cntOPFOR == 0 && {_cntVhlOPFOR == 0} && {_cntCIV != 0}) then {_succes = true};
-		};
 		case "casinf": { //mission (LZ1) succes wen target destroyed, No RTB/LZ2, _cntOPFOR = 0
 			if(_cntOPFOR == 0 && {_cntVhlOPFOR == 0}) then {_succes = true};
 		};
 		case "casarmored": { //mission (LZ1) succes wen target destroyed, No RTB/LZ2, _cntOPFOR = 0
+			if (count _vhlOPFOR != 0) then {
+				{if(alive _x)then{_cntVhlOPFOR = _cntVhlOPFOR+1}}forEach _vhlOPFOR;
+			};
 			if(_cntOPFOR == 0 && {_cntVhlOPFOR == 0}) then {_succes = true};
 		};
 		case "cascombined": { //mission (LZ1) succes wen target destroyed, No RTB/LZ2, _cntOPFOR = 0
+			if (count _vhlOPFOR != 0) then {
+				{if(alive _x)then{_cntVhlOPFOR = _cntVhlOPFOR+1}}forEach _vhlOPFOR;
+			};
 			if(_cntOPFOR == 0 && {_cntVhlOPFOR == 0}) then {_succes = true};
 		};
 		case "sar": { //"LZ1"->"BASE" succes wen passenger at _MissionFinish, _cntCIV != 0
@@ -978,6 +1019,13 @@ WMS_fnc_DFO_Cleanup = {
 		};
 		case "csar": { //"LZ1"->"BASE" succes wen passenger at _MissionFinish, no need to kill OPFOR, _cntCIV != 0
 			if(_cntCIV != 0 && {(position (leader (_grpCIV select 0))) distance _MissionFinish < 25}) then {_succes = true};
+		};
+		case "airassault": { //destroy target or capture zone at _MissionFinish, _cntOPFOR = 0, _vhlOPFOR != alive //the capture will do a "call for Cleanup/victory"
+			if (count _vhlOPFOR != 0) then {
+				{if(alive _x)then{_cntVhlOPFOR = _cntVhlOPFOR+1}}forEach _vhlOPFOR;
+			};
+
+			if(_cntOPFOR == 0 && {_cntVhlOPFOR == 0} && {_cntCIV != 0}) then {_succes = true};
 		};
 		case "maritime": { //this one will definitly need way more work
 		};
