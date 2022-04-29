@@ -12,9 +12,12 @@ v0.1_2022APR29_GitHub<br/>
 
 
 You can launch it from:<br/>
-WMS_initSystem (not Standalone)<br/>
-or initServer:<br/>
-if (true)then {execVM "WMS_DFO_functions.sqf"};<br/>
+WMS_initSystem (WMS_InfantryProgram, not Standalone).<br/>
+or<br/>
+in initServer:
+```
+if (true)then {execVM "WMS_DFO_functions.sqf"};
+```
 On dedicated server you need:
 in CfgRemoteExec.sqf :
 ```
