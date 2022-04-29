@@ -1,14 +1,14 @@
 # WMS_DFO_Standalone
 v0.1_2022APR29_GitHub<br/>
 
-	The DFO idea from Iceman/Project Hatchet Discord (https://discord.gg/YsRWVPvNeF) <br/>
-	was pretty close to mine when I built the module WMS_Event_ReconMission last year, which is running very basic and will probably stay this way.<br/>
-	So there is the the "Chopper only" version, player (pilots?) activated and "repeatable".<br/>
-	Standalone version will come after, when everything will be running fine.<br/>
-	1-Build the skeleton to fit in the existing WMS_InfantryProgram framework<br/>
-	2-Create a basic empty mission (probably "cargotransport") to test the call/spawn/triggers/succes/fail/cleanup<br/>
-	3-Build and test each mission one by one<br/>
-	4-Export a Standalone version<br/>
+	The DFO idea from Iceman/Project Hatchet Discord (https://discord.gg/YsRWVPvNeF)
+	was pretty close to mine when I built the module WMS_Event_ReconMission last year, which is running very basic and will probably stay this way.
+	So there is the "Chopper only" version, player (pilots?) activated and "repeatable".
+	Standalone version will come after, when everything will be running fine. (it actualy came first xD)
+	1-Build the skeleton to fit in the existing WMS_InfantryProgram framework
+	2-Create a basic empty mission (probably "cargotransport") to test the call/spawn/triggers/succes/fail/cleanup
+	3-Build and test each mission one by one
+	4-Export a Standalone version
 
 
 You can launch it from:<br/>
