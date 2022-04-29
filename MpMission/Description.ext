@@ -25,6 +25,15 @@ class CfgNotifications
 
 		//"\A3\ui_f\data\map\Markers\VehicleIcons\iconParachute_ca.paa";
 	};*/
+	class EventCustom
+	{
+		title = "%1";
+		description = "%2";
+		iconPicture = "%3";
+		color[] = {0.85,0.4,0,1}; //Orange
+		duration = 5;
+		priority = 3;
+	};
 	class TaskSucceeded
 	{
 		title = "%1";
@@ -39,74 +48,5 @@ class CfgNotifications
 		iconPicture = "\A3\ui_f\data\map\MapControl\taskiconfailed_ca.paa";
 		description = "%2";
 		priority = 6;
-	};
-	class TaskCanceled
-	{
-		title = "%1";
-		iconPicture = "\A3\ui_f\data\map\MapControl\taskiconcanceled_ca.paa";
-		description = "%2";
-		priority = 5;
-	};
-	class TaskAssigned
-	{
-		title = "%1";
-		iconPicture = "\A3\ui_f\data\map\MapControl\taskiconcreated_ca.paa";
-		description = "%2";
-		duration = 7;
-		priority = 4;
-	};
-	class ScoreAdded
-	{
-		title = "Score bonus";
-		iconText = "+%2";
-		description = "%1";
-		color[] = {0.5,1,1,1};
-		priority = 0;
-		difficulty[] = {"netStats"};
-	};
-	class EventWarning
-	{
-		title = "%1";
-		iconPicture = "\A3\ui_f\data\map\Markers\Military\warning_CA.paa";
-		description = "%2";
-		color[] = {0.9,0,0,1}; //red
-		duration = 5;
-		priority = 3;
-	};
-	class EventCustom
-	{
-		title = "%1";
-		description = "%2";
-		iconPicture = "%3";
-		color[] = {0.85,0.4,0,1}; //Orange
-		duration = 5;
-		priority = 3;
-	};
-	class EventCustomBlue
-	{
-		title = "%1";
-		description = "%2";
-		iconPicture = "%3";
-		color[] = {0,0.3,0.6,1}; //ColorBLUFOR
-		duration = 5;
-		priority = 3;
-	};
-	class EventCustomGreen
-	{
-		title = "%1";
-		description = "%2";
-		iconPicture = "%3";
-		color[] = {0,0.8,0,1}; //ColorGreen
-		duration = 5;
-		priority = 3;
-	};
-	class EventCustomRed
-	{
-		title = "%1";
-		description = "%2";
-		iconPicture = "%3";
-		color[] = {0,0.3,0.6,1}; //ColorWEST
-		duration = 5;
-		priority = 3;
 	};
 };
