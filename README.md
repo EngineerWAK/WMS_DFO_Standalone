@@ -31,14 +31,19 @@ At this point you do not have a respawn system but it does the job.<br/>
 If you are building a mission.sqm:<br/>
 Place your DFO Mission Object (where to call mission from, for exemple "Land_TripodScreen_01_large_F") and in the init, add:<br/>
 ```
-private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []];
-_ObjToAddAction pushBack _this;
-missionNameSpace setVariable ["WMS_DFO_ObjToAddAction",_ObjToAddAction];
+if(isServer)then{
+	private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []];
+	_ObjToAddAction pushBack this;
+	missionNameSpace setVariable ["WMS_DFO_ObjToAddAction",_ObjToAddAction];
+};
 ```
 Next to the DFO Object, place an Helipad (not "Land_HelipadEmpty_F") and add in the init:<br/>
 ```
-_this setVariable ["WMS_DFO_BaseHelipad",true];
-WMS_DFO_BasePositions pushBack (position _this);
+if(isServer)then{
+	private _BasePositions = missionNameSpace getVariable ["WMS_DFO_BasePositions", []];
+	_BasePositions pushBack (position this);
+	missionNameSpace setVariable ["WMS_DFO_BasePositions",_BasePositions];
+};
 ```
 You can have as many DFO Object as you want.<br/>
 
