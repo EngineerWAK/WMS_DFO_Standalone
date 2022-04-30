@@ -24,7 +24,7 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.12_2022APR29_GitHub";
+WAK_DFO_Version			= "v0.13_2022APR30_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics, still working on "airassault"
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -67,7 +67,6 @@ WMS_DFO_MkrColors		= ["colorOrange","colorGreen","colorRed"]; //["mission","RTB"
 WMS_DFO_Reward			= [500,2000]; //["rep","money"]
 WMS_DFO_MissionPaths	= [["BASE","LZ1","BASE"],["BASE","LZ1","LZ2"]]; // "takeoff/mission/complet" //the first "BASE" could become "AIR" if mission called during flight
 WMS_DFO_LastCall		= (time-WMS_DFO_CoolDown);
-WMS_DFO_BasePositions	= []; //KEEP EMPTY //will be pushed back from "somewhere" and used for mission call from choppers
 WMS_DFO_Running			= []; //KEEP EMPTY
 
 publicVariable "WMS_DFO_Running";
@@ -78,14 +77,36 @@ publicVariable "WMS_DFO_CoolDown";
 //STANDALONE MISSING VAR:
 if (WMS_DFO_Standalone) then {
 	WMS_AMS_MaxGrad 	= 0.15;
-	WMS_exileToastMsg 	= false;
+	WMS_exileToastMsg 	= false; //Exile Mod Notifications
+	WMS_Pos_Locals 		= []; //AutoScan
+	WMS_Pos_Villages	= []; //AutoScan
+	WMS_Pos_Cities 		= []; //AutoScan
+	WMS_Pos_Capitals 	= []; //AutoScan
+	WMS_Pos_Forests 	= []; //DIY, if no position, back to random _pos
+	WMS_Pos_Military 	= []; //DIY, if no position, back to random _pos
+	WMS_Pos_Factory 	= []; //DIY, if no position, back to random _pos
 };
 
 ////////////////////////////
 //FUNCTIONS:
 ////////////////////////////
+WMS_DFO_CollectPos = {
+	private _worldCenter 	= [worldsize/2,worldsize/2,0]; 
+	private _worldDiameter 	= ((worldsize/2)*1.413);
+	if (WMS_fnc_DFO_LOGs) then {Diag_log '|WAK|TNA|WMS|[DFO] collecting LOCALS positions'};
+	{WMS_Pos_Locals pushback position _x}forEach (nearestLocations [_worldCenter, ["nameLocal"],_worldDiameter]);
+	if (WMS_fnc_DFO_LOGs) then {Diag_log '|WAK|TNA|WMS|[DFO] collecting VILLAGES positions'};
+	{WMS_Pos_Villages pushback position _x}forEach (nearestLocations [_worldCenter, ["nameVillage"],_worldDiameter]);
+	if (WMS_fnc_DFO_LOGs) then {Diag_log '|WAK|TNA|WMS|[DFO] collecting CITIES positions'};
+	{WMS_Pos_Cities pushback position _x}forEach (nearestLocations [_worldCenter, ["nameCity"],_worldDiameter]);
+	if (WMS_fnc_DFO_LOGs) then {Diag_log '|WAK|TNA|WMS|[DFO] collecting CAPITALS positions'};
+	{WMS_Pos_Capitals pushback position _x}forEach (nearestLocations [_worldCenter, ["nameCityCapital"],_worldDiameter]);
+};
 WMS_fnc_DFO_createBaseAction = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_createBaseAction _this %1', _this]};
+	
+	WMS_DFO_BasePositions = missionNameSpace getVariable ["WMS_DFO_BasePositions", []];
+	
 	private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []]; //objects from mission.sqm will push themself there
 	//Standalone will need to create an object to add the action where to call a mission
 	if (count _ObjToAddAction == 0) then { 
@@ -108,7 +129,58 @@ WMS_fnc_DFO_createBaseAction = {
 		[_x]call WMS_fnc_DFO_addAction;
 	}forEach _ObjToAddAction;
 
+	if(WMS_DFO_UseJVMF) then {
+		private _payload = "";
+		private _payload2 = "";
+		private _BasePositions = [];
+		private _MissionTypes = "";
+		//["inftransport","cargotransport","airassault","casinf","casarmored","cascombined","sar","csar"]
+		if("inftransport" in WMS_DFO_MissionTypes || "cargotransport" in WMS_DFO_MissionTypes) then {_MissionTypes = _MissionTypes +"Transport, "};
+		if("airassault" in WMS_DFO_MissionTypes) then {_MissionTypes = _MissionTypes +"Air Assault, "};
+		if("casinf" in WMS_DFO_MissionTypes || "casarmored" in WMS_DFO_MissionTypes || "cascombined" in WMS_DFO_MissionTypes) then {_MissionTypes = _MissionTypes +"CAS, "};
+		if("sar" in WMS_DFO_MissionTypes || "csar" in WMS_DFO_MissionTypes) then {_MissionTypes = _MissionTypes +"Search & Rescue"};
+		if ((count WMS_DFO_BasePositions) == 0)then{
+			_payload = "No DFO Bases positions registered yet";
+			_payload2 = "DFO Bases are usualy around AirField (Traders)";
+		}else{
+			if (count WMS_DFO_BasePositions > 2) then { //JVMF 50 characteres limit per ligne
+				_BasePositions = [WMS_DFO_BasePositions select 0, WMS_DFO_BasePositions select 1];
+			}else {
+				_BasePositions = WMS_DFO_BasePositions;
+			};
+			_payload = "DFO Bases Known positions (first two):";
+			_payload2 = format ["%1",WMS_DFO_BasePositions];
+		};
+		[
+      		"WELCOME", // TITLE
+       		"DFO HQ", // SENDER
+       		"ALL", // RECIPIENTS
+      		0, //MSG TYPE
+      		[
+          		"Dynamic Flight Ops is now Activated",
+           		"Go to DFO base(s) to request a mission",
+				_payload,
+           		_payload2,
+           		"Available Missions:",
+           		_MissionTypes,
+				"",
+				"",
+				"",
+				""
+       		], //MSG TEXT //MUST BE AT LEAST 10 LINES
+       		[], // MSG DATA
+       		[
+            	[
+                	format ["%1:%2",(date select 3),(date select 4)],
+                	"DFO HQ",
+                	"SENT"
+            	]
+        	] // REPLIES
+   		] call WMS_fnc_DFO_JVMF;
+	};
+
 	if (WMS_DFO_Standalone) then {
+		[]call WMS_DFO_CollectPos;
 		//Cleanup loop
 		while {true} do {
 			{
@@ -194,6 +266,13 @@ WMS_fnc_DFO_BuildBase = {
 		_object enableSimulationGlobal true;
 		if ((_x select 0) == "Land_HelipadCircle_F") then {
 			_object setVariable ["WMS_DFO_BaseHelipad",true];
+			WMS_DFO_BasePositions pushBack (position _object);
+			/*
+			if(isServer)then{
+				private _BasePositions = missionNameSpace getVariable ["WMS_DFO_BasePositions", []];
+				_BasePositions pushBack (position this);
+				missionNameSpace setVariable ["WMS_DFO_BasePositions",_BasePositions];
+			};*/
 		};
 		_BaseObjects pushBack _object;
 		if ((_x select 0) == "Land_TripodScreen_01_large_F")then{
@@ -323,6 +402,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_posBase = position (_helipadList select 0);
 			_nil = [_posBase, "notFull"] call WMS_fnc_DFO_BuildBase;
 			(_helipadList select 0) setVariable ["WMS_DFO_BaseHelipad",true];
+			WMS_DFO_BasePositions pushBack _posBase;
 		};
 	} else {
 		//if not, create one
@@ -402,14 +482,13 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createOPFORinf = true;
 			_createOPFORvhl = true; //light/APC
 			_OPFORvhlType 	= [4,5];//[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"]]
-			_OPFORvhlCnt 	= selectRandom [1,2];
 			_selectedChoppers = WMS_DFO_Choppers select 0;//[["pylons"],["doorGunners"],["transport"],["medevac"]];
 			if("LZ2" in _MissionPath) then {
 				_MissionStart = "LZ1"; //pickup
-				_MissionFinish = "LZ2"; //drop/cover //those dudes will probably beed to be BLUFOR to be able to do something...
+				_MissionFinish = "LZ2"; //drop/cover
 			}else {
 				_MissionStart = "BASE"; //pickup
-				_MissionFinish = "LZ1"; //drop/cover //those dudes will probably beed to be BLUFOR to be able to do something...
+				_MissionFinish = "LZ1"; //drop/cover
 			};
 		};
 		case "maritime" : {_missionName = "If you see this, its fuckedUp";}; //this one will definitly need way more work
@@ -595,7 +674,12 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		{_objs pushback _x}forEach _triggList2;
 	};
 	//Notifications
-	if (WMS_DFO_UseJVMF) then {["blablablabla"] call WMS_fnc_DFO_JVMF};
+	if (WMS_DFO_UseJVMF) then {
+			private _expectedReinforce = _reinforce;
+			private _expectedVHL = _createOPFORvhl;
+			private _expectedInf = _createOPFORinf;
+			[toUpper _mission,"DFO HQ",name _playerObject,0,["Dynamic Flight Ops","New Mission Assigned",_missionName,format["Expected OPFOR Infantry: %1",_createOPFORinf],format["Expected OPFOR Vehicles: %1",_createOPFORvhl],format["Expected OPFOR Reinforcement: %1",_reinforce],"","","",""],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF;
+		};
 	if (WMS_exileToastMsg) then {
 		_sessionID = _playerObject getVariable ['ExileSessionID',''];
 		[_sessionID, 'toastRequest', ['InfoTitleAndText', ['Dynamic Flight Ops', (format ["%1 @ %2, %3min Timer",_missionName, ([round(_posLZ1 select 0), round(_posLZ1 select 1)]),round (_updatedTimer/60)])]]] call ExileServer_system_network_send_to;
@@ -785,7 +869,7 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
   		"" 
 	];
 	//Notifications
-	if (WMS_DFO_UseJVMF) then {["blablablabla"] call WMS_fnc_DFO_JVMF};
+	if (WMS_DFO_UseJVMF) then {["WELCOME","DFO HQ","ALL",0,["Dynamic Flight Ops","","","","","","","","",""],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF};
 	if (WMS_exileToastMsg) then {
 		_sessionID = _playerObject getVariable ['ExileSessionID',''];
 		[_sessionID, 'toastRequest', ['InfoTitleAndText', ['Dynamic Flight Ops', (format ["%1 @ %2, phase 2",_missionName, ([round(_pos select 0), round(_pos select 1)])])]]] call ExileServer_system_network_send_to;
@@ -801,7 +885,7 @@ WMS_fnc_DFO_MissionSucces = { //reward the pilot for the great job depending the
 		["_typeOfMission", "sar"]
 	];
 	//WMS_DFO_Reward = [500,2000]; //["rep","money"]
-	if (WMS_DFO_UseJVMF) then {["blablablabla"] call WMS_fnc_DFO_JVMF};
+	if (WMS_DFO_UseJVMF) then {["WELCOME","DFO HQ","ALL",0,["Dynamic Flight Ops","","","","","","","","",""],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF};
 	if (WMS_exileToastMsg) then {
 		_sessionID = _playerObject getVariable ['ExileSessionID',''];
 		[_sessionID, 'toastRequest', ['SuccessTitleAndText', ['Dynamic Flight Ops', 'Mission SUCCES!!!']]] call ExileServer_system_network_send_to;
@@ -826,6 +910,7 @@ WMS_fnc_DFO_JVMF = { //if (WMS_DFO_UseJVMF) then {[blablablabla] call WMS_fnc_DF
         case 3: {"MEDEVC"};
     };*/
 	//vtx_uh60_jvmf_fnc_submitMessage: Creates and sends a JVMF message from a creation dialog
+	_this call vtx_uh60_jvmf_fnc_attemptSendMessage;
 	};
 WMS_fnc_DFO_SetUnits = { //For Standalone but not only //will use regular loadout from unit classname
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_SetUnits _this %1', _this]};
@@ -1132,7 +1217,7 @@ WMS_fnc_DFO_Cleanup = {
 		detach _cargo;
 		deleteVehicle _cargo;
 		//send fail message
-		if (WMS_DFO_UseJVMF) then {["blablablablaBOOOOOOOOOOHHHHHHH"] call WMS_fnc_DFO_JVMF};
+		if (WMS_DFO_UseJVMF) then {["WELCOME","DFO HQ","ALL",0,["Dynamic Flight Ops","Mission Faild","","","","","","","",""],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF};
 		if (WMS_exileToastMsg) then {
 			_sessionID = _playerObject getVariable ['ExileSessionID',''];
 			[_sessionID, 'toastRequest', ['ErrorTitleAndText', ['Dynamic Flight Ops', 'Mission FAILED!!!']]] call ExileServer_system_network_send_to;
