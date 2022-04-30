@@ -35,7 +35,11 @@ private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction"
 _ObjToAddAction pushBack _this;
 missionNameSpace setVariable ["WMS_DFO_ObjToAddAction",_ObjToAddAction];
 ```
-Next to the DFO Object, place an Helipad (not "Land_HelipadEmpty_F")<br/>
+Next to the DFO Object, place an Helipad (not "Land_HelipadEmpty_F") and add in the init:<br/>
+```
+_this setVariable ["WMS_DFO_BaseHelipad",true];
+WMS_DFO_BasePositions pushBack (position _this);
+```
 You can have as many DFO Object as you want.<br/>
 
 If you already have a Mission.sqm:<br/>
