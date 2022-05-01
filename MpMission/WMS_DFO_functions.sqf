@@ -24,17 +24,17 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.21_2022APR230_GitHub";
+WAK_DFO_Version			= "v0.22_2022MAI01_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
 WMS_DFO_Reinforcement	= true; //NOT READY YET
 WMS_DFO_UseJVMF			= true; //https://github.com/Project-Hatchet/H-60
-WMS_DFO_RemoveDup		= true; //delete dead NPC primary weapons and backpack
-WMS_DFO_CancelOnKIA		= false; //NOT READY YET //should Fail the mission when _pilot die, it's a bit hardcore especialy with AA vehicles
+WMS_DFO_RemoveDup		= true; //delete dead NPC's primary weapon and backpack
 WMS_DFO_UsePilotsList 	= true; //if you want to limit DFO use to some players
 WMS_fnc_DFO_SmokeAtLZ	= true; //pop a smoke on the group you have to pickUp
+WMS_DFO_CancelOnKIA		= false; //NOT READY YET //should Fail the mission when _pilot die, it's a bit hardcore especialy with AA vehicles
 WMS_DFO_PilotsList		= ["76561197965501020"]; //Only those players will be able to use DFO if WMS_DFO_UsePilotsList
 WMS_DFO_MaxRunning		= 1;
 WMS_DFO_CoolDown		= 300;
@@ -93,6 +93,27 @@ if (WMS_DFO_Standalone) then {
 ////////////////////////////
 //FUNCTIONS:
 ////////////////////////////
+//if local, keep this here, if multi/dedi move WMS_fnc_DFO_killStats to MPMission\Mission.map\init.sqf to remoteExec on the client(s)
+WMS_fnc_DFO_killStats = { //LOCAL ON CLIENT, SERVER->remoteExec->CLIENT
+	params[["_messages", [["ERROR",00]]]]; 
+	private _payload = "<t align='left' size='1.2'>";
+	{ 
+		_payload = _payload + format ["<t color='#e57234' font='EtelkaMonospacePro'>%1</t><br/>", toUpper _x select 0]; //orange
+	}forEach _messages; 
+	_payload = _payload + "</t>";
+	if("CIV" in _payload)then{
+		_payload = _payload + "<t align='left' color='#d60000' font='EtelkaMonospacePro' size='1.4'>FRIENDLY FIRE</t>"; //red
+	};
+	[ 
+		parseText _payload,  
+		true,  //the display can be moved anywhere on the screen options/game/layout/mission/Scenario specific texts
+		nil,  
+		5,
+		[0.2,1.5],
+		0  
+	]spawn BIS_fnc_textTiles;
+};
+////////////////////////////
 WMS_DFO_CollectPos = {
 	private _worldCenter 	= [worldsize/2,worldsize/2,0]; 
 	private _worldDiameter 	= ((worldsize/2)*1.413);
@@ -127,15 +148,19 @@ WMS_fnc_DFO_ConvertTypeToCoord = {
 	} else {
 		if(_posType == "forest" && {count WMS_Pos_Forests != 0})then{
 			_return = selectRandom WMS_Pos_Forests;
+			_return = [_return, 0, 50, 1, 0, 0, 0, [], [_return,[]]] call BIS_fnc_findSafePos;
 		}else{
 			if(_posType == "city" && {count (WMS_Pos_Villages+WMS_Pos_Cities+WMS_Pos_Capitals) != 0})then{
 				_return = selectRandom (WMS_Pos_Villages+WMS_Pos_Cities+WMS_Pos_Capitals);
+				_return = [_return, 0, 50, 5, 0, 0, 0, [], [_return,[]]] call BIS_fnc_findSafePos;
 			}else{
 				if(_posType == "local" && {count WMS_Pos_Locals != 0})then{
 					_return = selectRandom WMS_Pos_Locals;
+					_return = [_return, 0, 50, 5, 0, 0, 0, [], [_return,[]]] call BIS_fnc_findSafePos;
 				}else{
 					if(_posType == "military" && {count WMS_Pos_Military != 0})then{
 						_return = selectRandom WMS_Pos_Military;
+						_return = [_return, 0, 50, 5, 0, 0, 0, [], [_return,[]]] call BIS_fnc_findSafePos;
 					}else{
 						if(_posType == "sea")then{
 							//use random but 2 "must be on water"
@@ -395,7 +420,7 @@ WMS_fnc_DFO_addAction = { //can be called afterwards to add DFO action(s) to a n
 WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_MaxRunning and probably diag_fps
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO _this %1', _this]};
 	private [
-		"_grps","_vhls","_objs","_mkrs","_pos","_radiusObjects","_MaxGrad","_posTypes","_createCIVinf","_createOPFORinf","_createCIVvhl","_createOPFORvhl","_MissionHexaID","_timeToDelete",
+		"_DFO_status","_DFO_BaseHelipads","_helipadList","_grps","_vhls","_objs","_mkrs","_pos","_radiusObjects","_MaxGrad","_posTypes","_createCIVinf","_createOPFORinf","_createCIVvhl","_createOPFORvhl","_MissionHexaID","_timeToDelete",
 		"_smokePickUp","_selectedChoppers","_crewCount","_OPFORvhlCnt","_OPFORvhlType","_CIVinfGrp","_CIVinfGrp2","_cargoObject","_missionName","_updatedTimer","_MissionPath","_MissionPathCoord","_posBase","_posLZ1","_posLZ2","_reinforce","_blackList","_mkrList","_triggList"
 		];
 	params [
@@ -444,11 +469,11 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	_posLZ2  	= [worldsize,0,0]; //default
 	_infType 	= "CIV"; //default //"OPFOR","CIV_ARMED","CIV"
 	//look around if there is already a "BASE" position //"Land_HelipadSquare_F","Land_HelipadRescue_F","Land_HelipadEmpty_F","Land_HelipadCivil_F","Land_HelipadCircle_F"
-	private _helipadList =  nearestObjects [_pos, ["Land_HelipadSquare_F","Land_HelipadRescue_F","Land_HelipadCivil_F","Land_HelipadCircle_F"], 150];
-	private _DFO_BaseHelipads = [];
+	_helipadList =  nearestObjects [_pos, ["Land_HelipadSquare_F","Land_HelipadRescue_F","Land_HelipadCivil_F","Land_HelipadCircle_F"], 150];
+	_DFO_BaseHelipads = [];
 	if (count _helipadList != 0) then {
 		{
-			private _DFO_status = _x getVariable ["WMS_DFO_BaseHelipad",false];
+			_DFO_status = _x getVariable ["WMS_DFO_BaseHelipad",false];
 			if (_DFO_status) then {_DFO_BaseHelipads pushBack _X};
 		}forEach _helipadList;
 		if (count _DFO_BaseHelipads != 0) then {
@@ -465,12 +490,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		_nil = [_posBase] call WMS_fnc_DFO_BuildBase;
 		WMS_DFO_BasePositions pushBack _posBase;
 	};
-	/*
-	if (WMS_DFO_Standalone) then {
-		_blackList = allPlayers select {alive _x} apply {[position _x, 900]};
-	}else {
-		_blackList = [] call WMS_fnc_AMS_SpnAiBlkListFull; //WMS_InfantryProgram
-	};*/
 	//generate Mission Hexa ID
 	_MissionHexaID = [] call WMS_fnc_DFO_generateHexaID;
 	//setParameters depending the mission:
@@ -560,15 +579,9 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	//select mission position(s)
 	//can be from one of the already registered zone like WMS_Pos_Villages or WMS_Pos_Forests or all mixed
 	_MissionPathCoord pushBack _posBase;
-	/*if (_Mission == "sar" || _Mission == "csar")then {
-		_posLZ1 = [_pos, (WMS_DFO_MinMaxDist select 0), (WMS_DFO_MinMaxDist select 1), _radiusObjects, 2, _MaxGrad, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
-	} else {
-		_posLZ1 = [_pos, (WMS_DFO_MinMaxDist select 0), (WMS_DFO_MinMaxDist select 1), _radiusObjects, 0, _MaxGrad, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
-	};*/
 	private _posType = selectRandom _posTypes;
 	if (_mission == "airassault" && {_MissionStart == "LZ1"}) then {
 		_posLZ1 = [_pos] call WMS_fnc_DFO_ConvertTypeToCoord;
-		//_pozLZ2 = [_posLZ1,_posType] call WMS_fnc_DFO_ConvertTypeToCoord;
 	} else {
 		_posLZ1 = [_pos,_posType] call WMS_fnc_DFO_ConvertTypeToCoord;
 	};
@@ -599,7 +612,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		
 	//chopper, for the poors
 	if (WMS_DFO_createChopper) then { //should not be used with WMS_TheLastCartridges but anyway the chopper can not sell (addAction/sell), however Exile Mod will sell it (sell/Classname)
-		//do not pushback to _vhls but addAction on it "pack to get the reward" or something
+		//addAction on it "pack to get the reward" or something
 		private _choppa = (selectRandom _selectedChoppers) createVehicle _posBase;
 		_choppa setDir (random 359);
 		clearMagazineCargoGlobal _choppa; 
@@ -644,7 +657,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			(units _OPFORinfGrp) orderGetIn true;
 			(_grps select 0) pushback _OPFORinfGrp; //need a check on this one
 			if (_mission == "airassault") then {
-				//[_OPFORinfGrp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
 				[_OPFORinfGrp] call CBA_fnc_taskDefend;
 				{
 					_x setVariable ["lambs_danger_disableAI", true];//deactivate LambsDanger
@@ -726,7 +738,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			for "_i" from 1 to (selectRandom [4,6,8,10]) do {
 				(selectRandom (WMS_DFO_NPCs select 0)) createUnit [_MissionFinish, _OPFORinfGrp];
 			};
-			//[_OPFORinfGrp, _MissionFinish, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 			[_OPFORinfGrp] call CBA_fnc_taskDefend; //GARRISON
 		}else{
 			for "_i" from 1 to (selectRandom [4,6,8,10]) do {
@@ -745,7 +756,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	if (_Mission == "sar" || _Mission == "csar")then{(_triggList select 0) attachTo [(leader _CIVinfGrp), [0,0,0]];};
 	//create reinforcement trigger
 	if (true) then { //the "reinforcement trigger is now used to create smoke at the pickup position (WMS_fnc_DFO_SmokeAtLZ) and the reinforcement itself is filtered inside the trigger
-	//if (WMS_DFO_Reinforcement && _reinforce) then {
 		private _triggList2 = nil;
 		if(_smokePickUp)then{
 			_triggList2 = [_posLZ1,"reinforce",[_MissionHexaID,_playerObject,_mkrs,_mission,_MissionPathCoord,_missionName,_MissionFinish,_reinforce,_smokePickUp,((_grps select 1) select 0)]] call WMS_fnc_DFO_CreateTrigger;
@@ -914,11 +924,11 @@ WMS_fnc_DFO_Reinforce = {
 		"_MissionPathCoord",
 		"_missionName",
 		"_MissionFinish",
-		"_reinforce",
-		"_smokePickUp",
-		"_grpSmoke"
+		"_reinforce", //should not be false
+		"_smokePickUp", //can be false
+		"_grpSmoke" //can be nil
 		];
-		private _playerScore = _playerObject getVariable ["ExileScore", 5000]; //will be usefull later
+		private _playerScore = _playerObject getVariable ["ExileScore", 5000]; //will be usefull later for reinforcement skill adjustment
 
 	};
 WMS_fnc_DFO_NextStepMkrTrigg = {
@@ -1037,6 +1047,8 @@ WMS_fnc_DFO_MissionSucces = { //reward the pilot for the great job depending the
 };
 WMS_fnc_DFO_PunishPunks = { //will be use to remind to those getting in the mission zone that it's not their mission, ACE broken legs and things like that
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_PunishPunks _this %1', _this]};
+	params ["_playerObject"];
+
 	};
 WMS_fnc_DFO_JVMF = { //if (WMS_DFO_UseJVMF) then {[blablablabla] call WMS_fnc_DFO_JVMF;};
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_JVMF _this %1', _this]};
@@ -1100,7 +1112,8 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 				[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)];
 				//add kill count WMS_InfantryProgram/ExileMod
 			}else {
-				[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)]; //NEED TO CHANGE THIS FOR STANDALONE 
+				//[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)]; //NEED TO CHANGE THIS FOR STANDALONE 
+				[_payload,"DFO"] remoteExec ['WMS_fnc_DFO_killStats',(owner _killer)];
 			};
 			//[format ["KIA %1, %2M AWAY, %3 ", toUpper(name _killed)],_dist, (_options select 3)] remoteExecCall ['SystemChat',_killer];
 			[format ["Killed %1, %2m away, %3 ", (name _killed),_dist, (_options select 3)]] remoteExec ['SystemChat',(owner _killer)];
