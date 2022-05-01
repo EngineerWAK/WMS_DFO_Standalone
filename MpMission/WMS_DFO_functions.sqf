@@ -24,15 +24,15 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.22_2022MAI01_GitHub";
+WAK_DFO_Version			= "v0.23_2022MAI01_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics
-WMS_fnc_DFO_LOGs		= true;	//For Debug
+WMS_fnc_DFO_LOGs		= false;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
-WMS_DFO_Reinforcement	= true; //NOT READY YET
-WMS_DFO_UseJVMF			= true; //https://github.com/Project-Hatchet/H-60
+WMS_DFO_Reinforcement	= false; //NOT READY YET
+WMS_DFO_UseJVMF			= false; //https://github.com/Project-Hatchet/H-60
 WMS_DFO_RemoveDup		= true; //delete dead NPC's primary weapon and backpack
-WMS_DFO_UsePilotsList 	= true; //if you want to limit DFO use to some players
+WMS_DFO_UsePilotsList 	= false; //if you want to limit DFO use to some players
 WMS_fnc_DFO_SmokeAtLZ	= true; //pop a smoke on the group you have to pickUp
 WMS_DFO_CancelOnKIA		= false; //NOT READY YET //should Fail the mission when _pilot die, it's a bit hardcore especialy with AA vehicles
 WMS_DFO_PilotsList		= ["76561197965501020"]; //Only those players will be able to use DFO if WMS_DFO_UsePilotsList
@@ -42,7 +42,7 @@ WMS_DFO_Timer			= 1800; //timer before mission timeOut, no reset/extend
 WMS_DFO_MinMaxDist		= [3000,6000];
 WMS_DFO_ReinfTriggDist	= 1000; //distance trigger will call reinforcement
 WMS_DFO_MkrRandomDist	= 500; //random distance to place the marker from SAR CSAR missions otherwise there is no "search"
-WMS_DFO_Reward			= [500,2000]; //["rep","money"]
+WMS_DFO_Reward			= [500,2000,['ACE_Can_Franta','ACE_Can_RedGull','ACE_MRE_LambCurry','ACE_MRE_MeatballsPasta','ACE_bloodIV_500','ACE_morphine','ACE_quikclot']]; //["rep","money",items for chopper return]
 WMS_DFO_OPFORcbtMod		= "YELLOW"; //Vehicle crew only //"WHITE" : Hold fire, engage at will/loose formation //"YELLOW" : Fire at will, keep formation //"RED" : Fire at will, engage at will/loose formation
 WMS_DFO_CargoType		= ["CargoNet_01_barrels_F","C_IDAP_CargoNet_01_supplies_F","CargoNet_01_box_F"];
 //WMS_DFO_MissionTypes	= ["airassault"];
@@ -95,10 +95,13 @@ if (WMS_DFO_Standalone) then {
 ////////////////////////////
 //if local, keep this here, if multi/dedi move WMS_fnc_DFO_killStats to MPMission\Mission.map\init.sqf to remoteExec on the client(s)
 WMS_fnc_DFO_killStats = { //LOCAL ON CLIENT, SERVER->remoteExec->CLIENT
-	params[["_messages", [["ERROR",00]]]]; 
+	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_killStats _this %1', _this]};
+	params[
+		["_messages", [["ERROR",00]]]
+		]; 
 	private _payload = "<t align='left' size='1.2'>";
 	{ 
-		_payload = _payload + format ["<t color='#e57234' font='EtelkaMonospacePro'>%1</t><br/>", toUpper _x select 0]; //orange
+		_payload = _payload + format ["<t color='#e57234' font='EtelkaMonospacePro'>%1</t><br/>", (_x select 0)]; //orange
 	}forEach _messages; 
 	_payload = _payload + "</t>";
 	if("CIV" in _payload)then{
@@ -619,6 +622,40 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		clearWeaponCargoGlobal _choppa; 
 		clearItemCargoGlobal _choppa; 
 		clearBackpackCargoGlobal _choppa;
+		[ //params ["_target", "_caller", "_actionId", "_arguments"];
+		_choppa,
+		[
+			"<t size='1' color='#068604'>Return Chopper to DFO HQ</t>",
+			"
+				_target = _this select 0; _caller = _this select 1;
+				_chopperPos = position _target;
+				_target enableDynamicSimulation false;
+				_target enableSimulation false;
+				_target setPos [worldSize,worldsize,-100];
+				_target setDamage 1;
+				_lootHolder = createVehicle ['WeaponHolderSimulated_scripted', _chopperPos, [], 0, 'CAN_COLLIDE'];
+				for '_i' from 1 to 6 do {
+					_lootHolder addItemCargoGlobal [selectRandom (WMS_DFO_Reward select 2),1];
+				};
+			",
+			[], //argument accessible in the script (_this select 3)
+			1,
+			true,
+			true,
+			"",
+			//"((getplayerUID _this) == (_target getVariable ['BuyerOwner', 0]) && (vehicle _this == _this))",
+			"
+				(alive _target) &&
+				{(vehicle _this == _this)} &&
+				{count (crew _target) == 0};
+			",
+			5
+		]
+	] remoteExec [
+		"addAction",
+		owner _playerObject, //0 for all players //2 server only //-2 everyone but the server
+		false //JIP
+	];
 	};
 	//CIV Vehicle
 	if (_createCIVvhl) then {}; //Nothing is using civilian vehicle yet
@@ -1041,7 +1078,7 @@ WMS_fnc_DFO_MissionSucces = { //reward the pilot for the great job depending the
 		_sessionID = _playerObject getVariable ['ExileSessionID',''];
 		[_sessionID, 'toastRequest', ['SuccessTitleAndText', ['Dynamic Flight Ops', format["Mission SUCCES! +%1 rep, +%2 poptabs",_moneyAdjusted,_scoreAdjusted]]]] call ExileServer_system_network_send_to;
 	} else {
-			["TaskSucceeded", ["Dynamic Flight Ops", format["Mission SUCCES! +%1 rep, +%2 $",_moneyAdjusted,_scoreAdjusted]]] remoteExec ["BIS_fnc_showNotification", (owner _playerObject)];
+			["TaskSucceeded", ["Dynamic Flight Ops", format["Mission SUCCES! +%1 rep, +%2 $",_scoreAdjusted,_moneyAdjusted]]] remoteExec ["BIS_fnc_showNotification", (owner _playerObject)];
 	};
 
 };
@@ -1113,7 +1150,7 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 				//add kill count WMS_InfantryProgram/ExileMod
 			}else {
 				//[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)]; //NEED TO CHANGE THIS FOR STANDALONE 
-				[_payload,"DFO"] remoteExec ['WMS_fnc_DFO_killStats',(owner _killer)];
+				[_payload] remoteExec ['WMS_fnc_DFO_killStats',(owner _killer)];
 			};
 			//[format ["KIA %1, %2M AWAY, %3 ", toUpper(name _killed)],_dist, (_options select 3)] remoteExecCall ['SystemChat',_killer];
 			[format ["Killed %1, %2m away, %3 ", (name _killed),_dist, (_options select 3)]] remoteExec ['SystemChat',(owner _killer)];
