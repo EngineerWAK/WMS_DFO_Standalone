@@ -24,15 +24,15 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.23_2022MAI01_GitHub";
+WAK_DFO_Version			= "v0.24_2022MAY02_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics
-WMS_fnc_DFO_LOGs		= false;	//For Debug
+WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
-WMS_DFO_Reinforcement	= false; //NOT READY YET
-WMS_DFO_UseJVMF			= false; //https://github.com/Project-Hatchet/H-60
+WMS_DFO_Reinforcement	= true; //NOT READY YET
+WMS_DFO_UseJVMF			= true; //https://github.com/Project-Hatchet/H-60
 WMS_DFO_RemoveDup		= true; //delete dead NPC's primary weapon and backpack
-WMS_DFO_UsePilotsList 	= false; //if you want to limit DFO use to some players
+WMS_DFO_UsePilotsList 	= true; //if you want to limit DFO use to some players
 WMS_fnc_DFO_SmokeAtLZ	= true; //pop a smoke on the group you have to pickUp
 WMS_DFO_CancelOnKIA		= false; //NOT READY YET //should Fail the mission when _pilot die, it's a bit hardcore especialy with AA vehicles
 WMS_DFO_PilotsList		= ["76561197965501020"]; //Only those players will be able to use DFO if WMS_DFO_UsePilotsList
@@ -79,6 +79,7 @@ publicVariable "WMS_DFO_PilotsList";
 
 //STANDALONE MISSING VAR:
 if (WMS_DFO_Standalone) then {
+	WMS_exileFireAndForget = false;
 	WMS_AMS_MaxGrad 	= 0.15;
 	WMS_exileToastMsg 	= false; //Exile Mod Notifications
 	WMS_Pos_Locals 		= []; //AutoScan
@@ -88,6 +89,7 @@ if (WMS_DFO_Standalone) then {
 	WMS_Pos_Forests 	= []; //DIY, if no position, back to random _pos
 	WMS_Pos_Military 	= []; //DIY, if no position, back to random _pos
 	WMS_Pos_Factory 	= []; //DIY, if no position, back to random _pos
+	WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos //Should be used for strict position (ASLW?) like ship deck, roof ("airassault"?)
 };
 
 ////////////////////////////
@@ -169,8 +171,12 @@ WMS_fnc_DFO_ConvertTypeToCoord = {
 							//use random but 2 "must be on water"
 							_return = [_pos, (WMS_DFO_MinMaxDist select 0), (WMS_DFO_MinMaxDist select 1), 5, 2, 0.5, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
 						}else{
-							//back to "random"
-							_return = [_pos, (WMS_DFO_MinMaxDist select 0), (WMS_DFO_MinMaxDist select 1), _radiusObjects, 0, _MaxGrad, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
+							if(_posType == "custom")then{
+								_return = selectRandom WMS_Pos_Custom; //ASLW
+							}else{
+								//back to "random"
+								_return = [_pos, (WMS_DFO_MinMaxDist select 0), (WMS_DFO_MinMaxDist select 1), _radiusObjects, 0, _MaxGrad, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
+							};
 						};
 					};
 				};
@@ -1059,21 +1065,33 @@ WMS_fnc_DFO_MissionSucces = { //reward the pilot for the great job depending the
 		case "airassault" 		: {_coef = 1.2};
 		case "cascombined" 		: {_coef = 2};
 	};
-	//WMS_DFO_Reward = [500,2000]; //["rep","money"]
 	private _score = WMS_DFO_Reward select 0;
 	private _money = WMS_DFO_Reward select 1;
 	private _scoreAdjusted = round (_score*_coef);
 	private _moneyAdjusted = round (_money*_coef);
 	private _playerScore = _playerObject getVariable ["ExileScore", 0];
 	private _playerMoney = _playerObject getVariable ["ExileMoney", 0];
-	_playerObject setVariable ["ExileScore", (_playerScore+_scoreAdjusted), true];
-	_playerObject setVariable ["ExileMoney", (_playerMoney+_moneyAdjusted), true];
+	private _playerScoUpdated = (_playerScore+_scoreAdjusted);
+	private _playerMonUpdated = (_playerMoney+_moneyAdjusted);
+	_playerObject setVariable ["ExileScore", _playerScoUpdated, true];
+	_playerObject setVariable ["ExileMoney", _playerMonUpdated, true];
 	//need Exile specific DB access update:
-
-	//need WMS_TheLastCartridges specific profileNamespace update:
-	
+	private _killerUID 	= getPlayerUID _playerObject;
+	if (WMS_exileFireAndForget) then { //DB Only for Rep, poptabs stay local
+		format["setAccountScore:%1:%2", _playerScoUpdated, _killerUID] call ExileServer_system_database_query_fireAndForget;
+		ExileClientPlayerScore = _playerScoUpdated;
+		(owner _playerObject) publicVariableClient "ExileClientPlayerScore";
+		ExileClientPlayerScore = nil;
+	}else {
+		//need WMS_TheLastCartridges specific profileNamespace update:
+		//_playerUID_ExileKills = "ExileKills_"+_killerUID;
+		_playerUID_ExileMoney = "ExileMoney_"+_killerUID;
+		_playerUID_ExileScore = "ExileScore_"+_killerUID;
+		profileNamespace setVariable [_playerUID_ExileScore,_playerScoUpdated];
+		profileNamespace setVariable [_playerUID_ExileMoney,_playerMonUpdated];
+	};
 	//Notifications:
-	if (WMS_DFO_UseJVMF) then {["SUCCESS","DFO HQ",name _playerObject,0,["DFO Mission Success",toUpper _mission,"Score Reward:",format["%1",_scoreAdjusted],"Money Reward:",format["%1",_moneyAdjusted],"","","","During dev, rewards are not permanent"],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF};
+	if (WMS_DFO_UseJVMF) then {["SUCCESS","DFO HQ",name _playerObject,0,["DFO Mission Success",toUpper _mission,format["Score Reward: %1",_scoreAdjusted],format["Money Reward: %1",_moneyAdjusted],"","","","","","During dev, rewards are not permanent"],[],[[format ["%1:%2",(date select 3),(date select 4)],"DFO HQ","SENT"]]] call WMS_fnc_DFO_JVMF};
 	if (WMS_exileToastMsg) then {
 		_sessionID = _playerObject getVariable ['ExileSessionID',''];
 		[_sessionID, 'toastRequest', ['SuccessTitleAndText', ['Dynamic Flight Ops', format["Mission SUCCES! +%1 rep, +%2 poptabs",_moneyAdjusted,_scoreAdjusted]]]] call ExileServer_system_network_send_to;
@@ -1129,7 +1147,7 @@ WMS_fnc_DFO_SetUnits = { //For Standalone but not only //will use regular loadou
 }; 
 WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_UnitEH _this %1', _this]};
-	private ["_dist","_options","_payload"];
+	private ["_playerUID_ExileKills","_killerUID","_playerKills","_dist","_options","_payload"];
 	params [
 		"_killed",
 		"_killer",
@@ -1149,12 +1167,23 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 				[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)];
 				//add kill count WMS_InfantryProgram/ExileMod
 			}else {
-				//[_payload,"DFO"] remoteExec ['WMS_fnc_displayKillStats',(owner _killer)]; //NEED TO CHANGE THIS FOR STANDALONE 
 				[_payload] remoteExec ['WMS_fnc_DFO_killStats',(owner _killer)];
 			};
-			//[format ["KIA %1, %2M AWAY, %3 ", toUpper(name _killed)],_dist, (_options select 3)] remoteExecCall ['SystemChat',_killer];
 			[format ["Killed %1, %2m away, %3 ", (name _killed),_dist, (_options select 3)]] remoteExec ['SystemChat',(owner _killer)];
-
+			//KILL COUNT
+			_playerKills = _killer getVariable ["ExileKills", 0];
+			_playerKills = _playerKills+1;
+			_killer setVariable ["ExileKills", _playerKills, true];
+			_killerUID 	= getPlayerUID _killer;
+			if (WMS_exileFireAndForget) then {
+				format["addAccountKill:%1", getPlayerUID _killer] call ExileServer_system_database_query_fireAndForget;
+				ExileClientPlayerKills = _playerKills;
+				(owner _killer) publicVariableClient "ExileClientPlayerKills";
+				ExileClientPlayerKills = nil;
+			} else {
+				_playerUID_ExileKills = "ExileKills_"+_killerUID;
+  				profileNamespace setVariable [_playerUID_ExileKills,_playerKills];
+			};
 		} else {
 			removeAllItems _killed;
 			removeAllWeapons _killed;
