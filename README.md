@@ -103,6 +103,31 @@ class CfgNotifications
 	};
 };
 ```
+in initPlayerLocal.sqf (ACE3 Function):
+```
+private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
+		if (WMS_DFO_UsePilotsList)then{
+			if((getPlayerUID player) in WMS_DFO_PilotsList)then{
+				[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+				hint 'Contacting Air Operations HQ';
+			}else{
+				hint 'DFO only for selected pilots, contact admins';
+			};
+		}else{
+			[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+			hint 'Contacting Air Operations HQ';
+		};
+	},{
+		(alive player) &&
+		{vehicle player isKindOf "helicopter"} &&
+		{count WMS_DFO_BasePositions != 0} &&
+		{count WMS_DFO_ObjToAddAction != 0} &&
+		{(count WMS_DFO_Running) <= WMS_DFO_MaxRunning} &&
+		{time > (WMS_DFO_LastCall+WMS_DFO_CoolDown)}
+		}
+	] call ace_interact_menu_fnc_createAction;
+[player, 1, ["ACE_SelfActions"], _actionDFO] call ace_interact_menu_fnc_addActionToObject;
+```
 ## License
 
 &copy; 2022 {|||TNA|||}WAKeupneo
