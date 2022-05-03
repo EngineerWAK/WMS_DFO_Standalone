@@ -24,12 +24,12 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.25_2022MAY02_GitHub";
-WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 90% of basics
+WAK_DFO_Version			= "v0.26_2022MAY03_GitHub";
+WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99% of basics
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
-WMS_DFO_Reinforcement	= true; //NOT READY YET
+WMS_DFO_Reinforcement	= true; //Each mission has it's own type of reinforcement
 WMS_DFO_UseJVMF			= true; //https://github.com/Project-Hatchet/H-60
 WMS_DFO_RemoveDup		= true; //delete dead NPC's primary weapon and backpack
 WMS_DFO_UsePilotsList 	= true; //if you want to limit DFO use to some players
@@ -45,10 +45,8 @@ WMS_DFO_MkrRandomDist	= 500; //random distance to place the marker from SAR CSAR
 WMS_DFO_Reward			= [500,2000,['ACE_Can_Franta','ACE_Can_RedGull','ACE_MRE_LambCurry','ACE_MRE_MeatballsPasta','ACE_bloodIV_500','ACE_morphine','ACE_quikclot']]; //["rep","money",items for chopper return]
 WMS_DFO_OPFORcbtMod		= "YELLOW"; //Vehicle crew only //"WHITE" : Hold fire, engage at will/loose formation //"YELLOW" : Fire at will, keep formation //"RED" : Fire at will, engage at will/loose formation
 WMS_DFO_CargoType		= ["CargoNet_01_barrels_F","C_IDAP_CargoNet_01_supplies_F","CargoNet_01_box_F"];
-//WMS_DFO_MissionTypes	= ["airassault"];
 WMS_DFO_MissionTypes	= ["inftransport","cargotransport","airassault","casinf","casarmored","cascombined","sar","csar"];// Troop transport, Cargo transport, Air Assault, CAS (Infantry, Armoured, combined), SAR, CSAR, Maritime
 WMS_DFO_Choppers		= [["B_Heli_Attack_01_F","B_Heli_Light_01_armed_F"],["B_Heli_Transport_01_F"],["B_Heli_Transport_03_unarmed_green_F","I_Heli_light_03_unarmed_F"],["C_IDAP_Heli_Transport_02_F"]]; //[["pylons","pylons"],["doorGunners","doorGunners"],["transport","transport"],["medevac","medevac"]];
-//WMS_DFO_Choppers		= [["vtx_MH60M_DAP","vtx_MH60S_Pylons"],["vtx_HH60","vtx_MH60S_GAU21L","vtx_MH60M","vtx_MH60S","vtx_UH60M"],["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"],["vtx_UH60M_MEDEVAC"]];//Hatchet
 WMS_DFO_NPCvehicles		= [//[[AIR_HEAVY],[AIR_LIGHT],[AIR_UNARMED],[HEAVY],[APC],[LIGHT],[UNARMED],[CIV],[STATICS],["BOATS"]]
 						["O_Heli_Attack_02_dynamicLoadout_F"],
 						["O_Heli_Light_02_dynamicLoadout_F"],
@@ -64,6 +62,24 @@ WMS_DFO_NPCs			= [ //[[OPFOR],[CIV_SOLDIER],[CIV]] //mainly for standalone versi
 						["O_crew_F","O_Soldier_GL_F","O_soldier_M_F","O_Soldier_AR_F"], //"O_Soldier_AA_F", no AA for now, it's pain in the ass for debugging //crew first //AA second
 						["B_helicrew_F","B_soldier_AR_F","B_Soldier_GL_F","B_soldier_M_F","B_Soldier_F"], //crew first //in arma civillian can not have weapon...
 						["C_Man_Paramedic_01_F","C_Man_UtilityWorker_01_F","C_journalist_F","C_Man_Fisherman_01_F","C_man_polo_1_F","C_Man_casual_1_F_afro_sick"]];
+/*
+WMS_DFO_Choppers		= [["vtx_MH60M_DAP","vtx_MH60S_Pylons"],["vtx_HH60","vtx_MH60S_GAU21L","vtx_MH60M","vtx_MH60S","vtx_UH60M"],["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"],["vtx_UH60M_MEDEVAC"]];//Hatchet
+WMS_DFO_NPCvehicles		= [//[[AIR_HEAVY],[AIR_LIGHT],[AIR_UNARMED],[HEAVY],[APC],[LIGHT],[UNARMED],[CIV],[STATICS],["BOATS"]]
+						["RHS_Ka52_vvsc","RHS_Mi24V_vvsc","RHS_Mi8MTV3_vvsc"],
+						["RHS_Mi24Vt_vvsc","RHS_Mi8mt_vvsc"],
+						["rhs_ka60_c","RHS_Mi8T_vvsc"],
+						["rhsgref_ins_zsu234","rhsgref_ins_t72bb","rhsgref_ins_bmp2e","rhsgref_ins_2s1_at","rhs_t80ue1"],//AA first
+						["rhsgref_ins_ural_Zu23","rhsgref_ins_btr70","rhsgref_ins_btr60","rhsgref_BRDM2_ins","rhs_btr80a_msv"],//"AA" first
+						["rhsgref_ins_uaz_dshkm","rhsgref_ins_uaz_spg9","O_LSV_02_armed_F","O_G_Offroad_01_armed_F","rhs_tigr_sts_3camo_vmf"],
+						["rhsgref_ins_uaz_open","rhsgref_ins_gaz66","rhsgref_ins_ural","rhsgref_ins_zil131_open","rhs_tigr_m_3camo_vmf"],
+						["C_Hatchback_01_F","C_Offroad_02_unarmed_F","C_Van_02_medevac_F","C_Truck_02_transport_F"],
+						["rhsgref_ins_ZU23","rhsgref_ins_Igla_AA_pod","rhsgref_ins_DSHKM","rhs_KORD_high_VDV"],//AA first
+						["O_T_Boat_Armed_01_hmg_F"]];
+WMS_DFO_NPCs			= [ //[[OPFOR],[CIV_SOLDIER],[CIV]] //mainly for standalone version
+						["rhs_vdv_combatcrew","rhs_vdv_mflora_at","rhs_vdv_mflora_aa","rhs_vdv_medic","rhs_mvd_izlom_arifleman_rpk","rhs_mvd_izlom_machinegunner","rhs_vdv_efreitor","rhs_vdv_rifleman","rhs_vdv_grenadier"], //"O_Soldier_AA_F", no AA for now, it's pain in the ass for debugging //crew first //AA second
+						["B_W_Helicrew_F","rhsusf_socom_swcc_crewman","rhsusf_socom_marsoc_cso_grenadier","rhsusf_socom_marsoc_marksman","rhsusf_socom_marsoc_sarc","rhsusf_socom_marsoc_jtac","rhsusf_usmc_marpat_wd_stinger","B_T_ghillie_tna_F","rhsusf_usmc_lar_marpat_wd_machinegunner","rhsusf_usmc_marpat_wd_autorifleman_m249","B_soldier_LAT2_F"], //crew first //in arma civillian can not have weapon...
+						["C_Man_Paramedic_01_F","C_Man_UtilityWorker_01_F","C_journalist_F","C_Man_Fisherman_01_F","C_man_polo_1_F","C_Man_casual_1_F_afro_sick"]];
+*/
 WMS_DFO_Markers			= ["loc_heli","mil_end_noShadow"]; //["mission","RTB"]; //["n_support","n_hq"]; //["loc_heli","mil_end_noShadow"]
 WMS_DFO_MkrColors		= ["colorOrange","colorGreen","colorRed"]; //["mission","RTB", "bigDanger"];
 WMS_DFO_MissionPaths	= [["BASE","LZ1","BASE"],["BASE","LZ1","LZ2"]]; // "takeoff/mission/complet" //the first "BASE" could become "AIR" if mission called during flight
@@ -94,6 +110,34 @@ if (WMS_DFO_Standalone) then {
 	WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos //Should be used for strict position (ASLW?) like ship deck, roof ("airassault"?)
 };
 
+////////////////////////////
+//CALL FROM CHOPPER:
+////////////////////////////
+//add this to initPlayerLocal.sqf if you want call for mission this directly from your chopper
+/*
+private _actionDFO = ["RequestDFOmission","RequestDFO Mission","",{
+		if (WMS_DFO_UsePilotsList)then{
+			if((getPlayerUID player) in WMS_DFO_PilotsList)then{
+				[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+				hint 'Contacting Air Operations HQ';
+			}else{
+				hint 'DFO only for selected pilots, contact admins';
+			};
+		}else{
+			[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+			hint 'Contacting Air Operations HQ';
+		};
+	},{
+		(alive player) &&
+		{vehicle player isKindOf "helicopter"} &&
+		{count WMS_DFO_BasePositions != 0} &&
+		{count WMS_DFO_ObjToAddAction != 0} &&
+		{(count WMS_DFO_Running) <= WMS_DFO_MaxRunning} &&
+		{time > (WMS_DFO_LastCall+WMS_DFO_CoolDown)}
+		}
+	] call ace_interact_menu_fnc_createAction;
+[player, 1, ["ACE_SelfActions"], _actionDFO] call ace_interact_menu_fnc_addActionToObject;
+*/
 ////////////////////////////
 //FUNCTIONS:
 ////////////////////////////
@@ -194,10 +238,11 @@ WMS_fnc_DFO_createBaseAction = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_createBaseAction _this %1', _this]};
 	
 	WMS_DFO_BasePositions = missionNameSpace getVariable ["WMS_DFO_BasePositions", []];
+	WMS_DFO_ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []];
 	
-	private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []]; //objects from mission.sqm will push themself there
+	//private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []]; //objects from mission.sqm will push themself there
 	//Standalone will need to create an object to add the action where to call a mission
-	if (count _ObjToAddAction == 0) then { 
+	if (count WMS_DFO_ObjToAddAction == 0) then { 
 		//bad Idea but why not. The object should be placed in the mission editor or anytime before calling this function
 		/* 
 		//Init:
@@ -215,7 +260,7 @@ WMS_fnc_DFO_createBaseAction = {
 	};
 	{
 		[_x]call WMS_fnc_DFO_addAction;
-	}forEach _ObjToAddAction;
+	}forEach WMS_DFO_ObjToAddAction;
 	
 	{if ("Advanced Combat Environment" in (_x select 0))then {WMS_DFO_AceIsRunning = true;}}forEach getLoadedModsInfo;
 
@@ -268,6 +313,8 @@ WMS_fnc_DFO_createBaseAction = {
         	] // REPLIES
    		] call WMS_fnc_DFO_JVMF;
 	};
+	publicVariable "WMS_DFO_ObjToAddAction";
+	publicVariable "WMS_DFO_BasePositions";
 
 	if (WMS_DFO_Standalone) then {
 		[]call WMS_DFO_CollectPos;
@@ -276,6 +323,10 @@ WMS_fnc_DFO_createBaseAction = {
 			{
 				if (((_x select 7) == "DFO")) then { //if it's not "DFO", it's really fuckedUp
 					_x call WMS_fnc_DFO_Cleanup;
+				}Else {
+					if ((_x select 7) == "REINF" && {time > (_x select 1)}) then { //do not call the reinforcement cleanup if time has not come
+						_x call WMS_fnc_DFO_RinforceCleanup; //["HexaID", time to delete, [_grps], [_vhls], [_objects],"","","REINF"]
+					};
 				};
 			}forEach WMS_DFO_Running;
 			uisleep 60;
@@ -367,6 +418,7 @@ WMS_fnc_DFO_BuildBase = {
 		_BaseObjects pushBack _object;
 		if ((_x select 0) == "Land_TripodScreen_01_large_F")then{
 			[_object]call WMS_fnc_DFO_addAction;
+			WMS_DFO_ObjToAddAction pushBack _object;
 		};
 	}forEach _DFO_BaseObjects;
 	if !(_option == "NOTRIGGER") then {
@@ -386,6 +438,8 @@ WMS_fnc_DFO_BuildBase = {
 			" 
 		];
 	};
+	publicVariable "WMS_DFO_ObjToAddAction";
+	publicVariable "WMS_DFO_BasePositions";
 	deleteVehicle _compoRefPoint;
 	_BaseObjects
 };
@@ -433,7 +487,7 @@ WMS_fnc_DFO_addAction = { //can be called afterwards to add DFO action(s) to a n
 WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_MaxRunning and probably diag_fps
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO _this %1', _this]};
 	private [
-		"_DFO_status","_DFO_BaseHelipads","_helipadList","_grps","_vhls","_objs","_mkrs","_pos","_radiusObjects","_MaxGrad","_posTypes","_createCIVinf","_createOPFORinf","_createCIVvhl","_createOPFORvhl","_MissionHexaID","_timeToDelete",
+		"_createChopper","_DFO_status","_DFO_BaseHelipads","_helipadList","_grps","_vhls","_objs","_mkrs","_pos","_radiusObjects","_MaxGrad","_posTypes","_createCIVinf","_createOPFORinf","_createCIVvhl","_createOPFORvhl","_MissionHexaID","_timeToDelete",
 		"_smokePickUp","_selectedChoppers","_crewCount","_OPFORvhlCnt","_OPFORvhlType","_CIVinfGrp","_CIVinfGrp2","_cargoObject","_missionName","_updatedTimer","_MissionPath","_MissionPathCoord","_posBase","_posLZ1","_posLZ2","_reinforce","_blackList","_mkrList","_triggList"
 		];
 	params [
@@ -467,6 +521,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	_updatedTimer 	= WMS_DFO_Timer;
 	_timeToDelete 	= (time+_updatedTimer);
 	_selectedChoppers = selectRandom WMS_DFO_Choppers;
+	_createChopper = WMS_DFO_CreateChopper;
 
 	_grps = [[],[]]; //pushback [[OPFOR],[CIV]]
 	_vhls = [[],[]]; //pushback [[OPFOR],[CIV]]
@@ -481,6 +536,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	_posLZ1  	= [0,worldsize,0]; //default
 	_posLZ2  	= [worldsize,0,0]; //default
 	_infType 	= "CIV"; //default //"OPFOR","CIV_ARMED","CIV"
+	//if the pilote is already in a chopper, no need to spawn one (call mission from chopper)
+	if(vehicle _playerObject != _playerObject) then {_createChopper = false;};
 	//look around if there is already a "BASE" position //"Land_HelipadSquare_F","Land_HelipadRescue_F","Land_HelipadEmpty_F","Land_HelipadCivil_F","Land_HelipadCircle_F"
 	_helipadList =  nearestObjects [_pos, ["Land_HelipadSquare_F","Land_HelipadRescue_F","Land_HelipadCivil_F","Land_HelipadCircle_F"], 150];
 	_DFO_BaseHelipads = [];
@@ -513,6 +570,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createCIVinf	= true;
 			_civType 		= selectRandom ["unarmed","armed"];
 			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_reinforce 		= selectRandom [false,true,false];
 			_selectedChoppers = WMS_DFO_Choppers select 2;
 			if (_missionStart == "BASE") then {_missionFinish = _MissionPath select 1;_civType = "armed";} else {_missionFinish = _MissionPath select 2};
 		};
@@ -520,6 +578,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_missionName 	= "Cargo Delivery";
 			_missionStart 	= selectRandom ["BASE","LZ1"];
 			_createCargo 	= true;
+			_reinforce 		= false;
 			_selectedChoppers = WMS_DFO_Choppers select 2;
 			if (_missionStart == "BASE") then {_missionFinish = _MissionPath select 1} else {_missionFinish = _MissionPath select 2};
 		};
@@ -527,6 +586,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_posTypes 		= ["random","local","military"]; //"random","forest","city","local","military","sea"
 			_missionName 	= "CAS Infantry";
 			_MissionStart 	= "LZ1";
+			_reinforce 		= selectRandom [true,false];
 			_createOPFORinf = true; //AA launchers //LMG
 			_selectedChoppers = WMS_DFO_Choppers select 0;
 		};
@@ -537,6 +597,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createOPFORvhl = true; //heavy
 			_OPFORvhlType 	= [3,4];
 			_OPFORvhlCnt 	= selectRandom [1,2,3];
+			_reinforce 		= selectRandom [true,false];
 			_selectedChoppers = WMS_DFO_Choppers select 0;
 		};
 		case "cascombined" : { //mission (LZ1) succes wen target destroyed, No RTB/LZ2
@@ -547,6 +608,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_OPFORvhlType 	= [0,1,3,4,5];
 			_OPFORvhlCnt 	= selectRandom [2,3,4];
 			_createOPFORinf = true;
+			_reinforce 		= selectRandom [true,false];
 			_selectedChoppers = WMS_DFO_Choppers select 0;
 		};
 		case "sar" : { //"LZ1"->"BASE"
@@ -555,6 +617,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_MissionStart 	= "LZ1";
 			_MissionFinish 	= "BASE";
 			_createCIVinf 	= true; //not armed
+			_reinforce 		= false;
 			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
 			_selectedChoppers = WMS_DFO_Choppers select 3;
 		};
@@ -567,6 +630,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createOPFORvhl = true; //light
 			_OPFORvhlType 	= [5];
 			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_reinforce 		= selectRandom [true,false];
 			_selectedChoppers = [WMS_DFO_Choppers select 1 select 0];
 		};
 		case "airassault" : { //destroy target or capture zone
@@ -575,6 +639,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createCIVinf 	= true; //military at _MissionStart or civilian at _MissionFinish or both ?
 			_createOPFORinf = true;
 			_createOPFORvhl = true; //light/APC
+			_reinforce 		= false; //KEEP false for now or it will be a mess
 			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
 			_OPFORvhlType 	= [4,5];//[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"]]
 			_selectedChoppers = WMS_DFO_Choppers select 0;//[["pylons"],["doorGunners"],["transport"],["medevac"]];
@@ -624,7 +689,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	};
 		
 	//chopper, for the poors
-	if (WMS_DFO_createChopper) then { //should not be used with WMS_TheLastCartridges but anyway the chopper can not sell (addAction/sell), however Exile Mod will sell it (sell/Classname)
+	if (_createChopper) then { //should not be used with WMS_TheLastCartridges but anyway the chopper can not sell (addAction/sell), however Exile Mod will sell it (sell/Classname)
 		//addAction on it "pack to get the reward" or something
 		private _choppa = (selectRandom _selectedChoppers) createVehicle _posBase;
 		_choppa setDir (random 359);
@@ -813,12 +878,12 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	};
 	//Notifications
 	if (WMS_DFO_UseJVMF) then {
-		private _statusInf = "FALSE";
-		private _statusVhl = "FALSE";
-		private _statusRei = "FALSE";
-		if (_createOPFORinf)then{_statusInf = "TRUE"};
-		if (_createOPFORvhl)then{_statusVhl = "TRUE"};
-		if (_reinforce)then{_statusRei = "TRUE"};
+		private _statusInf = "NO";
+		private _statusVhl = "NO";
+		private _statusRei = "NO";
+		if (_createOPFORinf)then{_statusInf = "YES"};
+		if (_createOPFORvhl)then{_statusVhl = "YES"};
+		if (_reinforce)then{_statusRei = "YES"};
 			[toUpper _mission,"DFO HQ",name _playerObject,0,[
 				"Dynamic Flight Ops",
 				"Mission Assigned",
@@ -951,7 +1016,7 @@ WMS_fnc_DFO_CreateTrigger = {
 				private _createSmoke = _options select 8;
 				private _smokeGroup = _options select 9;
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] DFO trigger REINFORCE | MissionID %1 | Pilot %2 | Marker %3 | Mission %4 | Mission path %5 |', (_options select 0), name (_options select 1), (_options select 2), (_options select 3), (_options select 4)]};
-				if (_reinforce) then {_options call WMS_fnc_DFO_Reinforce};
+				if (_reinforce) then {[_options select 0,_options select 1,_options select 3,_options select 6,_smokeGroup,(position thisTrigger)] call WMS_fnc_DFO_Reinforce};
 				if (_createSmoke) then {
 					_pos = (position leader _smokeGroup);
 					_smoke = 'SmokeShellPurple' createVehicle _pos;
@@ -969,20 +1034,75 @@ WMS_fnc_DFO_CreateTrigger = {
 };
 WMS_fnc_DFO_Reinforce = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce _this %1', _this]};
-	params [ //_options
+	params [ //_options //not anymore
 		"_MissionHexaID",
 		"_playerObject",
-		"_mkrs",
+		//"_mkrs",
 		"_mission",
-		"_MissionPathCoord",
-		"_missionName",
+		//"_MissionPathCoord",
+		//"_missionName",
 		"_MissionFinish",
-		"_reinforce", //should not be false
-		"_smokePickUp", //can be false
-		"_grpSmoke" //can be nil
+		//"_reinforce", //should not be false
+		//"_smokePickUp", //can be false
+		"_grpSmoke", //can be nil
+		"_pos" //trigger position
 		];
-		private _playerScore = _playerObject getVariable ["ExileScore", 5000]; //will be usefull later for reinforcement skill adjustment
+		private _typeOfReinforce = ["AIRpatrol","VHLpatrol","paradrop","AIRassault"];
+		private _timer = 900;
+		private _grps = [];
+		private _vhls = [];
+		private _objects = [];
+		private _grp = grpNull;
+		private _OPFPRvhl = objNull;
+		if !(_grpSmoke isEqualTo grpNull) then {
+			_pos = position (leader _grpSmoke);
+		};
+		if (surfaceIsWater _pos) then {_typeOfReinforce = ["AIRpatrol"]};
+		if(WMS_DFO_Standalone)then{
+			//private _playerScore = _playerObject getVariable ["ExileScore", 5000]; //will be usefull later for reinforcement skill adjustment
+			//["HexaID", time to delete, [_grps], [_vhls], [_objects],"","","REINF"] pushBack WMS_DFO_Running;
+			//let's test with "airpatrol" only
+			_blackList = allPlayers select {alive _x} apply {[position _x, 900]};
+			_typeOfReinforce = "AIRpatrol";
+			if (_typeOfReinforce == "AIRpatrol") then {
+				_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
+				_vhl = [[_randomPos select 0,_randomPos select 1, 250], (random 359), selectRandom (WMS_DFO_NPCvehicles select 0), EAST] call bis_fnc_spawnvehicle;      
+				_vehic = (_vhl select 0);  
+				_units = (_vhl select 1);   
+				_grp = (_vhl select 2); 
+				_vhls pushBack _vehic;
+				_grps pushBack _grp;
+				clearMagazineCargoGlobal _vehic;    
+				clearWeaponCargoGlobal _vehic;    
+				clearItemCargoGlobal _vehic;    
+				clearBackpackCargoGlobal _vehic;
+				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce "AIRpatrol" %1', _vhl]};
+			};
+			if (_typeOfReinforce == "VHLpatrol") then {
+				_OPFPRvhl = selectRandom (WMS_DFO_NPCvehicles select 4); //APC
+				if(_mission == "csar"||_mission == "sar"||_mission == "inftransport"||_mission == "cargotransport") then {
+					_OPFPRvhl = selectRandom (WMS_DFO_NPCvehicles select 5); //light
+				};
+				_randomPos = [_pos, 300, WMS_DFO_ReinfTriggDist, 8, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_findSafePos;
+				_vhl = [[_randomPos select 0,_randomPos select 1, 2], (random 359), _OPFPRvhl, EAST] call bis_fnc_spawnvehicle;      
+				_vehic = (_vhl select 0);  
+				_units = (_vhl select 1);   
+				_grp = (_vhl select 2); 
+				_vhls pushBack _vehic;
+				_grps pushBack _grp;
+				clearMagazineCargoGlobal _vehic;    
+				clearWeaponCargoGlobal _vehic;    
+				clearItemCargoGlobal _vehic;    
+				clearBackpackCargoGlobal _vehic;
+				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce "VHLpatrol" %1', _vhl]};
+			};
+			[_units,[_MissionHexaID,_playerObject,_mission,"OPFOR"]] call WMS_fnc_DFO_SetUnits;
+			[_grp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
+			["_MissionHexaID", (time+_timer), _grps, _vhls, _objects,"","","REINF"] pushBack WMS_DFO_Running;
 
+		}else{
+			[_playerObject, _pos, "DFO",_typeOfReinforce] call WMS_fnc_DynAI_selScen;
+		};
 	};
 WMS_fnc_DFO_NextStepMkrTrigg = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_NextStepMkrTrigg _this %1', _this]};
@@ -1121,14 +1241,14 @@ WMS_fnc_DFO_PunishPunks = { //will be use to remind to those getting in the miss
 	params [
 		"_playerObject",
 		["_maxDamage",0.4],
-		["_parts", selectRandom ["head", "body", "leftarm", "rightarm", "leftleg", "rightleg"]], //["head", "body", "leftarm", "rightarm", "leftleg", "rightleg"] ACE
-		["_projectiles", selectRandom ["stab","bullet","grenade"]] //["stab","bullet","grenade"]
+		["_part", selectRandom ["head", "body", "leftarm", "rightarm", "leftleg", "rightleg"]], //["head", "body", "leftarm", "rightarm", "leftleg", "rightleg"] ACE
+		["_projectiles", selectRandom ["stab","bullet","grenade","explosive","shell","vehiclecrash","backblast","falling"]] //["stab","bullet","grenade","explosive","shell","vehiclecrash","collision","backblast","punch","falling","ropeburn","fire"]
 		];
 
 	if (WMS_DFO_AceIsRunning) then {
 		//[_playerObject, [[0.5, "Body", 1]], "bullet"] call ace_medical_damage_fnc_woundsHandlerBase;
 		//[cursorTarget, 1, "body", "stab", player] call ace_medical_fnc_addDamageToUnit;
-		[_playerObject, _maxDamage, _parts, _projectiles, _playerObject] remoteExecCall ["ace_medical_fnc_addDamageToUnit",owner _playerObject];
+		[_playerObject, _maxDamage, _part, _projectiles, _playerObject] remoteExecCall ["ace_medical_fnc_addDamageToUnit",owner _playerObject];
 	} else {
 		//Bohemia:
 		/*_parts = [
@@ -1205,6 +1325,7 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 		if (_killer == (_options select 1) || vehicle _killer == vehicle (_options select 1)) then { //multi chopper missions will become a problem so no punishment on the player, just cleanup the bodies
 			if !(WMS_DFO_RemoveDup) then {
 				_killed removeWeapon (primaryWeapon _killed);
+				removeAllWeapons _killed;
 				removeBackpackGlobal _killed;
 			};
 			moveOut _killed;
@@ -1241,8 +1362,8 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 			//here need a selectRandom broken limbs for the _killer
 			[_killer] call WMS_fnc_DFO_PunishPunks;
 			_killed removeWeapon (primaryWeapon _killed);
-			removeAllItems _killed;
 			removeAllWeapons _killed;
+			removeAllItems _killed;
 			removeBackpackGlobal _killed;
 			removeVest _killed;
 			"SmokeShellYellow" createVehicle (position _killed);
@@ -1312,7 +1433,27 @@ WMS_fnc_DFO_CallForCleanup = {
 		(_this select 0) call WMS_fnc_DFO_Cleanup;
 	};
 };
+WMS_fnc_DFO_RinforceCleanup = { //["HexaID", time to delete, [_grps], [_vhls], [_objects],"","","REINF"]
+	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_RinforceCleanup _this %1', _this]};
+	private ["_HexaID","_timer","_grps","_vhls","_objects"];
+	_HexaID = (_this select 0); //""
+	_timer 	= (_this select 1); //number
+	_grps 	= (_this select 2); //[]
+	_vhls 	= (_this select 3); //[]
+	_objects = (_this select 4); //[]
 
+	if (time > _timer) then {
+		//maybe add a player distance check before
+		{
+			{deleteVehicle _x;} forEach ({alive _x} count units _x);
+			deleteGroup _x;
+		} forEach _grps;
+		{deleteVehicle _x;} forEach _vhls;
+		{deleteVehicle _x;} forEach _objects;
+		WMS_DFO_Running deleteAt (WMS_DFO_Running find _this);
+	};
+		
+};
 WMS_fnc_DFO_Cleanup = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Cleanup _this %1', _this]};
 	private [
