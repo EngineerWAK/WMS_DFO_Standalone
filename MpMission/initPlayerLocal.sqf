@@ -8,7 +8,7 @@
  * This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. 
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  */
- private _actionDFO = ["RequestDFOmission","RequestDFO Mission","",{
+ private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
 		if (WMS_DFO_UsePilotsList)then{
 			if((getPlayerUID player) in WMS_DFO_PilotsList)then{
 				[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
