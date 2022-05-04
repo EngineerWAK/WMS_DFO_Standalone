@@ -20,7 +20,7 @@ Save your mission:<br/>
 Scenario/Save As.../MPMissions/MyAmazingMission (DO NOT BINARIZE)<br/>
 ALT/TAB to your file explorer<br/>
 Open: Documents\Arma 3 - Other Profiles\"YOURPROFILENAME"\mpmissions\MyAmazingMission.Altis<br/>
-Copy and past CfgRemoteExec.sqf (not needed in local but do it), InitServer.sqf, Description.ext and WMS_DFO_Functions.sqf<br/>
+Copy and past CfgRemoteExec.sqf (not needed in local but do it), InitServer.sqf, Description.ext, initPlayerLocal.sqf and WMS_DFO_Functions.sqf<br/>
 ALT/TAB back to arma<br/>
 Click Play/Play In MultiPlayer (MP)<br/>
 Click on your dude in Alpha 1-1, OK (Bottom right), Continue<br/>
@@ -105,7 +105,9 @@ class CfgNotifications
 ```
 in initPlayerLocal.sqf (ACE3 Function):
 ```
-private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
+if (WMS_DFO_AceIsRunning)then{
+	//ACE SELF ACTION
+	private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
 		if (WMS_DFO_UsePilotsList)then{
 			if((getPlayerUID player) in WMS_DFO_PilotsList)then{
 				[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
@@ -126,7 +128,40 @@ private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
 		{time > (WMS_DFO_LastCall+WMS_DFO_CoolDown)}
 		}
 	] call ace_interact_menu_fnc_createAction;
-[player, 1, ["ACE_SelfActions"], _actionDFO] call ace_interact_menu_fnc_addActionToObject;
+	[player, 1, ["ACE_SelfActions"], _actionDFO] call ace_interact_menu_fnc_addActionToObject;
+}else {
+	//REGULAR ADDACTION
+	player addAction [
+		"<t size='1' color='#4bff1a'>Request DFO Mission</t>", {
+			if (WMS_DFO_UsePilotsList)then{
+				if((getPlayerUID player) in WMS_DFO_PilotsList)then{
+					[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+					hint 'Contacting Air Operations HQ';
+				}else{
+					hint 'DFO only for selected pilots, contact admins';
+				};
+			}else{
+				[player,selectRandom WMS_DFO_ObjToAddAction] remoteExec ['WMS_fnc_Event_DFO', 2];
+				hint 'Contacting Air Operations HQ';
+			};
+		}, 
+		nil, 
+		1, 
+		true, 
+		true, 
+		"", 
+		"
+			(alive player) &&
+			{vehicle player isKindOf 'helicopter'} &&
+			{count WMS_DFO_BasePositions != 0} &&
+			{count WMS_DFO_ObjToAddAction != 0} &&
+			{(count WMS_DFO_Running) <= WMS_DFO_MaxRunning} &&
+			{time > (WMS_DFO_LastCall+WMS_DFO_CoolDown)}
+		",  
+		5, 
+		false 
+	];
+};
 ```
 ## License
 
