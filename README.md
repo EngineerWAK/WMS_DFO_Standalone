@@ -39,10 +39,14 @@ if(isServer)then{
 ```
 Next to the DFO Object, place an Helipad (not "Land_HelipadEmpty_F") and add in the init:<br/>
 ```
-if(isServer)then{
+if(isServer)then{ 
 	private _BasePositions = missionNameSpace getVariable ["WMS_DFO_BasePositions", []];
-	_BasePositions pushBack (position this);
-	missionNameSpace setVariable ["WMS_DFO_BasePositions",_BasePositions];
+	if(surfaceIsWater position this) then {
+		_BasePositions pushBack (getPosASL this);
+	} else {
+		_BasePositions pushBack (getPosATL this);
+	}; 
+	missionNameSpace setVariable ["WMS_DFO_BasePositions",_BasePositions]; 
 };
 ```
 You can have as many DFO Object as you want.<br/>
