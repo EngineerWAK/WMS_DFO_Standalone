@@ -20,7 +20,7 @@
 // Start DynamicFlightOps
 if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 */
-WAK_DFO_Version			= "v0.30_2022MAY07_GitHub";
+WAK_DFO_Version			= "v0.31_2022MAY08_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -370,7 +370,18 @@ WMS_fnc_DFO_BuildBase = {
 			["Land_SignM_WarningMilitaryArea_english_F",[-23.3,11.1,0],107]
 		];
 	};
-	
+	if (_option = "DANGER") then {
+		_DFO_BaseObjects = [
+			["VR_3DSelector_01_incomplete_F",[-12.5,0,0],0],
+			["VR_3DSelector_01_incomplete_F",[0,-12.5,0],0],
+			["VR_3DSelector_01_incomplete_F",[12.5,0,0],0],
+			["VR_3DSelector_01_incomplete_F",[0,12.5,0],0],
+			["VR_3DSelector_01_incomplete_F",[8.8,8.8,0],45],
+			["VR_3DSelector_01_incomplete_F",[-8.9,8.8,0],45],
+			["VR_3DSelector_01_incomplete_F",[-8.8,-8.9,0],45],
+			["VR_3DSelector_01_incomplete_F",[8.8,-8.8,0],45]
+		];
+	};
 	private _compoRefPoint = createVehicle ["VR_Area_01_circle_4_yellow_F", _pos, [], 0, "CAN_COLLIDE"];
 	private _dirCompo = (Random 359);
 	_compoRefPoint setDir _dirCompo;
@@ -1153,8 +1164,10 @@ WMS_fnc_DFO_CreateTrigger = {
 					if !((vehicle _pilot) in thisList) then {	
 						[(thisList select 0)] call WMS_fnc_DFO_PunishPunks;
 						'Dynamic Flight Ops, mission is in progress' remoteExec ['hint', (owner (thisList select 0))];
+						'Dynamic Flight Ops, mission is in progress' remoteExec ['systemChat', (owner (thisList select 0))];
 					}else {
 						'Dynamic Flight Ops, Redo your Approach, maxSpeed 15km/h' remoteExec ['hint', (owner (thisList select 0))];
+						'Dynamic Flight Ops, Redo your Approach, maxSpeed 15km/h' remoteExec ['systemChat', (owner (thisList select 0))];
 					};
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] DFO trigger LZ1 | MissionID %1 | Pilot %2 | Marker %3 | Mission %4 | Mission path %5 |', (_datas select 0), name _pilot , (_datas select 2), _mission, (_datas select 4)]};
 					
@@ -1415,6 +1428,7 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 		["_airassaultDatas",[]]//[0,1,EAST,_pos,_OPFORvhlCnt,_OPFORvhlType,3,6]
 		];
 	//if (isnil _playerObject) exitWith { //nope
+	private _triggerHeight = 10;
 	if (_MissionHexaID ==  "zzzzzzzz") exitWith {
 		if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_NextStepMkrTrigg params fuckedUp _MissionHexaID %1', _MissionHexaID]};
 		};
@@ -1435,6 +1449,7 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 	_MkrLZ setMarkerText format ["%1 %2",_missionName,(name _playerObject)];
 
 	if (_mission == 'airassault') then {
+		_triggerHeight = 30; //sometimes the trigger is stuck between building with no way to get close enough
 		_MkrLZ setMarkerColor (WMS_DFO_MkrColors select 2);
 		//[0,1,EAST,_pos,_OPFORvhlCnt,_OPFORvhlType,3,6] //"airassault" options to create the vehicles, numbers are regular option index
 		//_vhlReturns = [_MissionHexaID,_playerObject,EAST,_pos,_OPFORvhlCnt,_OPFORvhlType,_mission,_MissionFinish] call WMS_fnc_DFO_CreateVhls; //[_vhls,_grps,_faction] //[[],[],side]
@@ -1450,7 +1465,13 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 	};
 	//CREATE OBJECTS TO MARK THE ZONE
 	if !(_pos isEqualTo (_MissionPathCoord select 0)) then {
-		private _objects = [_pos,"NOTRIGGER"]call WMS_fnc_DFO_BuildBase;
+		private _objects = [];
+		//if (_mission == 'airassault') then {
+		if (true) then {
+			_objects = [_pos,"DANGER"]call WMS_fnc_DFO_BuildBase;
+		}else{
+			_objects = [_pos,"NOTRIGGER"]call WMS_fnc_DFO_BuildBase;
+		};
 		{(WMS_DFO_Running select _RefIndex select 4) pushBack _x;} forEach _objects;
 	};
 	//CREATE THE TRIGGER
@@ -1464,13 +1485,14 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 		(WMS_DFO_Running select _RefIndex select 4) pushBack _helper;
 	};		
 	(WMS_DFO_Running select _RefIndex select 4) pushBack _triggMission;
-	_triggMission setVariable ["WMS_DFO_triggData", [_MissionHexaID,_playerObject,_mkrName,_mission,_MissionPathCoord,_missionName,_MissionFinish], false];  
+	_triggMission setVariable ["WMS_DFO_triggData", [_MissionHexaID,_playerObject,_mkrName,_mission,_MissionPathCoord,_missionName,_MissionFinish], false]; 
+	_triggMission setVariable ["WMS_DFO_triggerHeight", _triggerHeight, false]; 
 	_triggMission setTriggerActivation ["ANYPLAYER", "PRESENT", true]; //should be activated by the "pilot" only
 	_triggMission setTriggerArea [12.5, 12.5, 0, false];
 	_triggMission setTriggerStatements  
 	[ 
   		"
-			this && ({ thisTrigger distance _x <= 10 } count thislist) > 0
+			this && ({ thisTrigger distance _x <= (thisTrigger getVariable 'WMS_DFO_triggerHeight') } count thislist) > 0
 		",   
   		"	
 			private _datas = (thisTrigger getVariable 'WMS_DFO_triggData');
@@ -1484,9 +1506,11 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 			}else{
 				if !((vehicle _pilot) in thisList) then {	
 					[(thisList select 0)] call WMS_fnc_DFO_PunishPunks;
-					'Dynamic Flight Ops, Do not Park here' remoteExec ['hint', (owner (thisList select 0))];
+					'Dynamic Flight Ops, Stay outside of this zone' remoteExec ['hint', (owner (thisList select 0))];
+					'Dynamic Flight Ops, Stay outside of this zone' remoteExec ['systemChat', (owner (thisList select 0))];
 				}else {
 					'Dynamic Flight Ops, Redo your Approach, maxSpeed 15km/h' remoteExec ['hint', (owner (thisList select 0))];
+					'Dynamic Flight Ops, Redo your Approach, maxSpeed 15km/h' remoteExec ['systemChat', (owner (thisList select 0))];
 				};
 				
 			};
@@ -1736,8 +1760,11 @@ WMS_fnc_DFO_infUnLoad = { //easy way: moveOut _unit;
 		"_vehiceObject",
 		"_pilotObject"
 	];
+	private _dudes = [];
 	{
 		if (!(isPlayer _x) && {group _x != group _pilotObject}) then {
+			_dudes pushBack _x;
+			_x allowDamage false; //protect those little guys against broken legs...
 			moveOut _x;
 			//[_vehiceObject] call AR_Rappel_All_Cargo; //need to test on dedi
 			unassignVehicle _x;
@@ -1757,6 +1784,8 @@ WMS_fnc_DFO_infUnLoad = { //easy way: moveOut _unit;
 		};
 		uisleep 0.3;
 	}forEach crew _vehiceObject;
+	uisleep 3;
+	{_x allowDamage true}forEach _dudes;
 };
 WMS_fnc_DFO_CallForCleanup = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CallForCleanup _this %1', _this]};
