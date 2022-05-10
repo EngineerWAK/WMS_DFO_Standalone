@@ -27,7 +27,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.38_2022MAY10_GitHub";
+WAK_DFO_Version			= "v0.4_2022MAY10_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -656,14 +656,15 @@ WMS_fnc_DFO_CreateVhls = {
 		private _crewCount = 3;
 		private _loadoutIndex = 0;
 		//define what type of vehicle, depending what type of mission
-		if (surfaceIsWater _pos) then {_OPFORvhlType = [9]};
 		private _veh = objNull;
 		for "_i" from 1 to _OPFORvhlCnt do {
 			private _vhlType = selectRandom _OPFORvhlType; //number from an array
 			private _vhlCN = selectRandom (WMS_DFO_NPCvehicles select _vhlType); ///classname from array in an array
 			if (_mission == "airassault") then {
+				if (surfaceIsWater _MissionFinish) then { _vhlCN = selectRandom (WMS_DFO_NPCvehicles select 9);};
 				_veh = createVehicle [_vhlCN, _MissionFinish, [], 75, "NONE"];
 			}else{
+				if (surfaceIsWater _pos) then { _vhlCN = selectRandom (WMS_DFO_NPCvehicles select 9);};
 				_veh = createVehicle [_vhlCN, _pos, [], 75, "NONE"];
 			};
 			_veh setDir (random 359);
@@ -828,7 +829,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_MissionStart 	= "LZ1";
 			_createOPFORvhl = true; //heavy
 			_OPFORvhlType 	= [3,4];
-			_OPFORvhlCnt 	= selectRandom [1,2,3];
+			_OPFORvhlCnt 	= selectRandom [2,3,4];
 			_reinforce 		= selectRandom [true,false];
 			_selectedChoppers = WMS_DFO_Choppers select 0;
 		};
@@ -838,7 +839,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_MissionStart 	= "LZ1";
 			_createOPFORvhl = true;
 			_OPFORvhlType 	= [0,1,3,4,5,8];
-			_OPFORvhlCnt 	= selectRandom [2,3,4];
+			_OPFORvhlCnt 	= selectRandom [3,4,5];
 			_createOPFORinf = true;
 			_reinforce 		= selectRandom [true,false];
 			_selectedChoppers = WMS_DFO_Choppers select 0;
@@ -1115,7 +1116,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	//create reinforcement trigger
 	private _triggListREIN = [];
 	private _triggListSIGN = [];
-	if (_reinforce) then {
+	if (_reinforce && WMS_DFO_Reinforcement) then {
 		_triggListREIN = [_posLZ1,"reinforce",[_MissionHexaID,_playerObject,_mkrs,_mission,_MissionPathCoord,_missionName,_MissionFinish,_reinforce,_smokePickUp,nil,(getPlayerUID _playerObject)]] call WMS_fnc_DFO_CreateTrigger;
 		};
 	{_objs pushback _x}forEach _triggListREIN;
@@ -1448,7 +1449,6 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 						};
 					};	
 				};
-				_datas call WMS_fnc_DFO_CallForCleanup;
 				deleteVehicle thisTrigger;
 			}else{
 				if !(_pilotUID in _UIDlist) then {	
@@ -1466,7 +1466,7 @@ WMS_fnc_DFO_NextStepMkrTrigg = {
 					};
 				};
 			};
-		",  
+		",  //_datas call WMS_fnc_DFO_CallForCleanup;
   		"" 
 	];
 	//Notifications
@@ -1493,6 +1493,9 @@ WMS_fnc_DFO_Reinforce = {
 		"_pos" //trigger position
 		//no _pilotUID here
 		];
+		if !(WMS_DFO_Reinforcement) exitWith {
+			if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce Nope, no reinforcement rot you _MissionHexaID %1', _MissionHexaID]};
+		};
 		private _typeOfReinforce = ["AIRpatrol","VHLpatrol","paradrop","AIRassault"];
 		private _timer = 500+(random 120);
 		private _grps = [];
