@@ -10,7 +10,7 @@ v0.1_2022APR29_GitHub<br/>
 	3-Build and test each mission one by one
 	4-Export a Standalone version
 
-Note that "Standalone" Version doesn't include any mission.sqm, you need your own (basically to spawn/respawn).<br/>
+"Standalone" Version now include a basic mission.sqm to see how it works. But you can build your own (basically to spawn/respawn).<br/>
 If you have nothing: <br/>
 Launch arma3,<br/>
 Open mission Editor,<br/>
@@ -109,6 +109,8 @@ class CfgNotifications
 ```
 in initPlayerLocal.sqf (ACE3 Function):
 ```
+WMS_DFO_AceIsRunning = false;
+{if ("Advanced Combat Environment" in (_x select 0))then {WMS_DFO_AceIsRunning = true;}}forEach getLoadedModsInfo;
 if (WMS_DFO_AceIsRunning)then{
 	//ACE SELF ACTION
 	private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
@@ -128,7 +130,7 @@ if (WMS_DFO_AceIsRunning)then{
 		{vehicle player isKindOf "helicopter"} &&
 		{count WMS_DFO_BasePositions != 0} &&
 		{count WMS_DFO_ObjToAddAction != 0} &&
-		{(count WMS_DFO_Running) <= WMS_DFO_MaxRunning} &&
+		{(count WMS_DFO_Running) < WMS_DFO_MaxRunning} &&
 		{time > (WMS_DFO_LastCall+WMS_DFO_CoolDown)}
 		}
 	] call ace_interact_menu_fnc_createAction;

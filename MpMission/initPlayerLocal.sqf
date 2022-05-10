@@ -11,6 +11,8 @@
  ///////////////////////////
  //Call mission From chopper
  ///////////////////////////
+ WMS_DFO_AceIsRunning = false;
+{if ("Advanced Combat Environment" in (_x select 0))then {WMS_DFO_AceIsRunning = true;}}forEach getLoadedModsInfo;
 if (WMS_DFO_AceIsRunning)then{
 	//ACE SELF ACTION
 	private _actionDFO = ["RequestDFOmission","Request DFO Mission","",{
