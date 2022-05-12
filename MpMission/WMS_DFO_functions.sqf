@@ -27,7 +27,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.42_2022MAY11_GitHub";
+WAK_DFO_Version			= "v0.43_2022MAY12_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -1051,29 +1051,42 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		if (_mission == "airassault") then {
 			_CIVinfGrp = createGroup [CIVILIAN, false];
 			for "_i" from 1 to _CIVinfCount do {
-				if (surfaceIsWater _missionFinish) then { //works but messy	
+				if (surfaceIsWater _missionFinish) then {
+					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _missionFinish;
 					private _unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
-					_unit disableAI "PATH";
+					if ((getPosASL _unit )select 2 < 0) then {
+						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
+						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_missionFinish select 2)+0.5];
+					}else {	
+						_unit disableAI "PATH";
+					};
 				}else{	
-					_unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), [_missionFinish select 0,_missionFinish select 1,0], [], 3, "NONE"];
+					_unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _missionFinish, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
 				};	
 			};
 			[_CIVinfGrp, _missionFinish, 75, 5, "MOVE", "CARELESS", "BLUE", "NORMAL", "DIAMOND", "", [1,2,3]] call CBA_fnc_taskPatrol;
 			_CIVinfGrp2 = createGroup [WEST, false];
 			for "_i" from 1 to _CIVinfCount do {
-				if (surfaceIsWater _pos) then { //works but messy	
+				if (surfaceIsWater _pos) then {
+					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
 					private _unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
-					_unit disableAI "PATH";
+					if ((getPosASL _unit )select 2 < 0) then {
+						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
+						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_pos select 2)+0.5];
+					}else {	
+						_unit disableAI "PATH";
+					};
 				}else{	
-					_unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), [_pos select 0,_pos select 1,0], [], 3, "NONE"];
+					_unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _pos, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
-				};			
+				};	
 			};
+
 			{
 				_x setUnitPos "MIDDLE";
 				_x allowDamage false; //you don't want those dudes to get killed by roaming AI before you pick them up
@@ -1091,11 +1104,17 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		}else{
 			_CIVinfGrp = createGroup [CIVILIAN, false];
 			for "_i" from 1 to _CIVinfCount do {
-				if (surfaceIsWater _pos) then { //works but messy	
+				if (surfaceIsWater _pos) then {
+					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
 					private _unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
-					_unit disableAI "PATH";
+					if ((getPosASL _unit )select 2 < 0) then {
+						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
+						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_pos select 2)+0.5];
+					}else {	
+						_unit disableAI "PATH";
+					};
 				}else{	
 					_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _pos, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
@@ -1268,8 +1287,15 @@ WMS_fnc_DFO_CreateTrigger = {
 	if (_triggType isEqualTo "LZ1" || _triggType isEqualTo "BASE") then {
 		if (_mission == 'airassault') then {_options pushBack _airassaultDatas};
 		if !(_mission == "casinf" || _mission == "casarmored" || _mission == "cascombined") then { //CAS do not need trigger, the cleanup is every minute check and no RTB
-		_triggMission = createTrigger ["EmptyDetector", _pos, true];
+			_triggMission = createTrigger ["EmptyDetector", _pos, true];
 			private _helper = createVehicle ["VR_Area_01_circle_4_yellow_F", [_pos select 0,_pos select 1,(_pos select 2)+0.15], [], 0, "CAN_COLLIDE"];
+			if (surfaceIsWater _pos) then {
+				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CreateTrigger position trigger is over Water! %1', _pos]};
+				if ((getPosASL _helper)select 2 < 0) then {
+					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CreateTrigger Moving trigger to the surface ! %1', _pos]};
+					_helper setPosASL [((getpos _helper) select 0), ((getpos _helper) select 1), (_pos select 2)+0.5];
+				};
+			};
 			if (WMS_DFO_HideLZTarget) then {
 				_helper setvectorup [0,0,-1]; //[0,0,-1] will turn the helper upsidedown and hide it (from the top)
 			} else {
@@ -1286,11 +1312,11 @@ WMS_fnc_DFO_CreateTrigger = {
 				private _RefIndex = _result find 0;
 				(WMS_DFO_Running select _RefIndex select 4) pushBack (_this select 1);
 			};		
-		_triggMission setVariable ["WMS_DFO_triggData", _options, false];  
-		_triggMission setTriggerActivation ["ANYPLAYER", "PRESENT", true];
-		_triggMission setTriggerArea [12.5, 12.5, 0, false];
-		_triggMission setTriggerStatements  
-		[ 
+			_triggMission setVariable ["WMS_DFO_triggData", _options, false];  
+			_triggMission setTriggerActivation ["ANYPLAYER", "PRESENT", true];
+			_triggMission setTriggerArea [12.5, 12.5, 0, false];
+			_triggMission setTriggerStatements  
+			[ 
   			"
 			  this && ({ thisTrigger distance _x <= 15 } count thislist) > 0
 			",
@@ -1326,9 +1352,8 @@ WMS_fnc_DFO_CreateTrigger = {
 				};
 			",  
   			"" //if (((vehicle _pilot) in thisList) && {(vehicle _pilot) isKindOf 'Helicopter'} && {speed (vehicle _pilot) < 15}) then {
-		];
-				
-		_triggList pushBack _triggMission;
+			];	
+			_triggList pushBack _triggMission;
 		};
 	};
 	if (_triggType == "reinforce") then {
