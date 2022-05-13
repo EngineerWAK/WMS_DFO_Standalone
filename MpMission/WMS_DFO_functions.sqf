@@ -27,7 +27,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.45_2022MAY12_GitHub";
+WAK_DFO_Version			= "v0.46_2022MAY13_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -77,11 +77,11 @@ WMS_DFO_NPCs			= [ //[[OPFOR],[CIV_SOLDIER],[CIV]] //mainly for standalone versi
 */
 //RHS/HATCHET
 WMS_DFO_Choppers		= [
-							["vtx_MH60M_DAP","vtx_MH60S_Pylons"], //["pylons"]
-							["vtx_HH60","vtx_MH60S_GAU21L","vtx_MH60M","vtx_MH60S","vtx_UH60M"], //["doorGunners"] //GAU21L ONLY 5 cargo positions
-							["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"], //["transport"] //SLICK ONLY 4 cargo positions //"transport" will be used mainly for crates
-							["vtx_UH60M_MEDEVAC"] //["medevac"]
-							];//Hatchet
+						["vtx_MH60M_DAP","vtx_MH60S_Pylons"], //["pylons"]
+						["vtx_HH60","vtx_MH60S_GAU21L","vtx_MH60M","vtx_MH60S","vtx_UH60M"], //["doorGunners"] //GAU21L ONLY 5 cargo positions
+						["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"], //["transport"] //SLICK ONLY 4 cargo positions //"transport" will be used mainly for crates
+						["vtx_UH60M_MEDEVAC"] //["medevac"]
+						];//Hatchet
 WMS_DFO_NPCvehicles		= [//[[AIR_HEAVY],[AIR_LIGHT],[AIR_UNARMED],[HEAVY],[APC],[LIGHT],[UNARMED],[CIV],[STATICS],["BOATS"]]
 						["RHS_Ka52_vvsc","RHS_Mi24V_vvsc","RHS_Mi8MTV3_vvsc"],
 						["RHS_Mi24Vt_vvsc","RHS_Mi8mt_vvsc"],
@@ -1611,7 +1611,8 @@ WMS_fnc_DFO_Reinforce = {
 			//private _playerScore = _playerObject getVariable ["ExileScore", 5000]; //will be usefull later for reinforcement skill adjustment
 			_blackList = allPlayers select {alive _x} apply {[getPosATL _x, 900]};
 			if (_typeOfReinforce == "AIRpatrol") then {
-				_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;
+				//_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;
+				_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
 				_vhl = [[_randomPos select 0,_randomPos select 1, 250], (random 359), selectRandom (WMS_DFO_NPCvehicles select 0), EAST] call bis_fnc_spawnvehicle;      
 				_vehic = (_vhl select 0);  
 				_units = (_vhl select 1);   
@@ -1632,7 +1633,8 @@ WMS_fnc_DFO_Reinforce = {
 				if(_mission == "csar"||_mission == "sar"||_mission == "inftransport"||_mission == "cargotransport") then {
 					_OPFPRvhl = selectRandom (WMS_DFO_NPCvehicles select 5); //light
 				};
-				_randomPos = [_pos, 300, WMS_DFO_ReinfTriggDist, 8, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;
+				//_randomPos = [_pos, 300, WMS_DFO_ReinfTriggDist, 8, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;
+				_randomPos = [_pos, 300, WMS_DFO_ReinfTriggDist, 8, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
 				_vhl = [[_randomPos select 0,_randomPos select 1, 2], (random 359), _OPFPRvhl, EAST] call bis_fnc_spawnvehicle;      
 				_vehic = (_vhl select 0);  
 				_units = (_vhl select 1);   
@@ -1666,7 +1668,8 @@ WMS_fnc_DFO_Reinforce = {
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce "paradrop" %1', _OPFORinfGrp]};
 			};
 			if (_typeOfReinforce == "AIRassault") then {
-				_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;  
+				//_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified;
+				_randomPos = [_pos, WMS_DFO_ReinfTriggDist+900, WMS_DFO_ReinfTriggDist+2500, 0, 0, 0, 0, _blackList, [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;  
 				_posLand = [_pos, 0, 250, 25, 0, 0, 0, [], [([[[_pos, 150]], []] call BIS_fnc_randomPos),[]]] call WMS_fnc_BIS_FindSafePosModified; 
 				_Helipad = "Land_HelipadEmpty_F" createVehicle _posLand;
 				_objects pushBack _Helipad;
@@ -1935,6 +1938,28 @@ WMS_fnc_DFO_UnitEH = { //For Standalone but not only
 		removeAllWeapons _killed;
 		removeBackpackGlobal _killed;
 	};
+	[_killed,
+		[
+			"Hide Body", // title
+			{
+				params ["_target", "_caller", "_actionId", "_arguments"]; // script
+				hideBody _target;
+				_caller removeAction _actionId;
+				[_target]spawn{uisleep 5; deleteVehicle (_this select 0)};
+			},
+			nil,		// arguments
+			1.5,		// priority
+			true,		// showWindow
+			true,		// hideOnUse
+			"",			// shortcut
+			"!(alive _target)", // condition
+			1.5	// radius
+		]
+	] remoteExec [
+		"addAction",
+		0, //0 for all players
+		false //JIP
+	];
 };
 WMS_fnc_DFO_infLoad = { //easy way: _unit moveInCargo _chopper;
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_infLoad _this %1', _this]};
@@ -1961,8 +1986,8 @@ WMS_fnc_DFO_infLoad = { //easy way: _unit moveInCargo _chopper;
 			_x enableAI "PATH";
 		};
 	}forEach _Units;
-	if (surfaceIsWater (getPosATL _vehiceObject)) then {
-		{_x moveInCargo _vehiceObject}forEach _units;
+	if (surfaceIsWater (getPosATL _vehiceObject) && {(getPosATL (_units select 0)) select 2 > 0.1}) then {
+		{_x moveInCargo _vehiceObject}forEach _units; //teleport in the chopper
 	}else {
 		//if (side (_units select 0) == WEST ) then { //That would be "airassault"
 		if (false) then {
