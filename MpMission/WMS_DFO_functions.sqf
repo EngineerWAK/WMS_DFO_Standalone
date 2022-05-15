@@ -27,7 +27,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.52_2022MAY15_GitHub";
+WAK_DFO_Version			= "v0.54_2022MAY15_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -1496,7 +1496,7 @@ WMS_fnc_DFO_CreateTrigger = {
 						_smoke = 'SmokeShellPurple' createVehicle _pos;
 						_smoke attachTo [(leader _smokeGroup), [0,0,0]];
 						_flare = 'F_40mm_Red' createVehicle [_pos select 0, _pos select 1, 150];
-						_flare setVelocity [0.03,-0.01,0];
+						_flare setVelocity [1,-0.01,0];
 					};
 				};
 				deleteVehicle thisTrigger;
@@ -2327,25 +2327,6 @@ WMS_fnc_DFO_Cleanup = {
 		};
 	};
 };
-/*WMS_fnc_DFO_CallForCleanup = { //There is no more call for cleanup, sometime the timing was messing with the victory/fail
-	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CallForCleanup _this %1', _this]};
-	params ["_MissionHexaID","_playerObject","_mkrName","_mission","_MsnPathCoord"];
-	private _result = []; 
-	{ 
-		_found = _x find _MissionHexaID;
-		_result pushback _found;
-	}forEach WMS_DFO_Running;
-	_DFOeventArrayRef = _result find 9;
-
-	if (_DFOeventArrayRef == -1) exitWith {if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CallForCleanup MissionID %1 doesnt exist, result', _MissionHexaID,_result]};};
-	private _DFOeventArray = WMS_DFO_Running select _DFOeventArrayRef;
-	if !(_mission == "inftransport" ||_mission == "sar" ||_mission == "csar") then { //ca eather wait for the cleaning loop or call for an immediat cleanup with else {(_this select 0) call WMS_fnc_DFO_Cleanup};
-		[_DFOeventArray]spawn {
-			uisleep 15; //if success conditions are "alive civilians" only, if the cleanup loop does a check during this time, that will be SUCCESS at first (proximity win) then FAIL at the end of the 15 secondes (no more units to win)
-			(_this select 0) call WMS_fnc_DFO_Cleanup;
-		};
-	};
-};*/
 //////////
 [] call WMS_fnc_DFO_createBaseAction;
 if (WMS_fnc_DFO_LOGs) then {'|WAK|TNA|WMS|[DFO] WMS_DFO_Functions, System Started'};
