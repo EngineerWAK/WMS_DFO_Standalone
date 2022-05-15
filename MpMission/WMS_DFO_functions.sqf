@@ -27,7 +27,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.49_2022MAY14_GitHub";
+WAK_DFO_Version			= "v0.52_2022MAY15_GitHub";
 WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -535,16 +535,33 @@ WMS_fnc_DFO_BuildBase = {
 			["VR_3DSelector_01_incomplete_F",[8.8,-8.8,0],45]
 		];
 	}else {
-		_DFO_BaseObjects = [
-			["Sign_Arrow_Large_Green_F",[-12.5,0,0],0],
-			["Sign_Arrow_Large_Green_F",[0,-12.5,0],0],
-			["Sign_Arrow_Large_Green_F",[12.5,0,0],0],
-			["Sign_Arrow_Large_Green_F",[0,12.5,0],0],
-			["Sign_Arrow_Large_Green_F",[8.8,8.8,0],45],
-			["Sign_Arrow_Large_Green_F",[-8.9,8.8,0],45],
-			["Sign_Arrow_Large_Green_F",[-8.8,-8.9,0],45],
-			["Sign_Arrow_Large_Green_F",[8.8,-8.8,0],45]
-		];
+		if(_option == "MEDEVAC") then {
+			_DFO_BaseObjects = [
+				["VR_3DSelector_01_default_F",[0,-75,0],0],
+				["VR_3DSelector_01_default_F",[75,0,0],0],
+				["VR_3DSelector_01_default_F",[0,75,0],0],
+				["VR_3DSelector_01_default_F",[-75,0,0],0],
+				["VR_3DSelector_01_default_F",[64.9,-37.5,0],30],
+				["VR_3DSelector_01_default_F",[37.5,64.9,0],30],
+				["VR_3DSelector_01_default_F",[-37.5,-65,0],30],
+				["VR_3DSelector_01_default_F",[-65,37.5,0],30],
+				["VR_3DSelector_01_default_F",[37.7,-64.9,0],329.9],
+				["VR_3DSelector_01_default_F",[-64.9,-37.7,0],329.9],
+				["VR_3DSelector_01_default_F",[-37.7,64.8,0],329.9],
+				["VR_3DSelector_01_default_F",[64.9,37.7,0],329.9]
+			];
+		} else {
+			_DFO_BaseObjects = [
+				["Sign_Arrow_Large_Green_F",[-12.5,0,0],0],
+				["Sign_Arrow_Large_Green_F",[0,-12.5,0],0],
+				["Sign_Arrow_Large_Green_F",[12.5,0,0],0],
+				["Sign_Arrow_Large_Green_F",[0,12.5,0],0],
+				["Sign_Arrow_Large_Green_F",[8.8,8.8,0],45],
+				["Sign_Arrow_Large_Green_F",[-8.9,8.8,0],45],
+				["Sign_Arrow_Large_Green_F",[-8.8,-8.9,0],45],
+				["Sign_Arrow_Large_Green_F",[8.8,-8.8,0],45]
+			];
+		};
 	};
 	if (_option == "FULL" || _option == "HELIPAD" ) then {
 		_DFO_BaseObjects = _DFO_BaseObjects + [["Land_HelipadCircle_F",[0,0,0],0]];
@@ -602,6 +619,9 @@ WMS_fnc_DFO_BuildBase = {
 			_object setposATL _objectVectoriel;
 			_gradient = surfaceNormal getPosATL _object;
 			_object setvectorup _gradient;
+			if(_option == "MEDEVAC") then {
+				_object setPos [_objectVectoriel select 0,_objectVectoriel select 1,0];
+			};
 		};
 		_object allowDamage false;
 		_object enableSimulationGlobal true;
@@ -618,7 +638,7 @@ WMS_fnc_DFO_BuildBase = {
 			if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_BuildBase this is really fuckedUp, Object %1 underWater %2', _object, (getPosASL _object)]};
 		};
 	}forEach _DFO_BaseObjects;
-	if (_option == "DANGER") then {_option = "NOTRIGGER"};
+	if (_option == "DANGER" || _option == "MEDEVAC") then {_option = "NOTRIGGER"};
 	if (_option != "NOTRIGGER") then {
 		private _triggMission = createTrigger ["EmptyDetector", _pos, true];
 		private _helper = createVehicle ["VR_Area_01_circle_4_grey_F", [_pos select 0,_pos select 1,(_pos select 2)+0.1], [], 0, "CAN_COLLIDE"];
@@ -762,7 +782,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO _this %1', _this]};
 	private [
 		"_playerUID","_createChopper","_DFO_status","_DFO_BaseHelipads","_helipadList","_grps","_vhls","_objs","_mkrs","_pos","_radiusObjects","_MaxGrad","_posTypes","_createCIVinf","_createOPFORinf","_createCIVvhl","_createOPFORvhl","_MissionHexaID","_timeToDelete",
-		"_OPFinfCount","_CIVinfCount","_smokePickUp","_selectedChoprs","_crewCount","_OPFORvhlCnt","_OPFORvhlType","_CIVinfGrp","_CIVinfGrp2","_cargoObject","_missionName","_updatedTimer","_MissionPath","_MsnPathCoord","_posBase","_posLZ1","_posLZ2","_reinforce","_blackList","_mkrList","_triggList"
+		"_objects","_unit","_OPFinfCount","_CIVinfCount","_smokePickUp","_selectedChoprs","_crewCount","_OPFORvhlCnt","_OPFORvhlType","_CIVinfGrp","_CIVinfGrp2","_cargoObject","_missionName","_updatedTimer","_MissionPath","_MsnPathCoord","_posBase","_posLZ1","_posLZ2","_reinforce","_blackList","_mkrList","_triggList"
 		];
 	params [
 		"_playerObject", //event manager won't spawn a mission but acrivate the menu for player to call a mission
@@ -792,6 +812,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	_CIVinfGrp 		= objNull; //Mission created
 	_CIVinfGrp2 	= objNull; //Mission created //"airassault"
 	_OPFORinfGrp 	= objNull; //Mission created
+	_unit			= objNull; //Mission created
+	_objects		= [];
 	_OPFORvhlType 	= [4]; //Dynamic //[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"],["BOATS"]]
 	_OPFORvhlCnt 	= 1; //Dynamic
 	_crewCount 		= 3; //Dynamic
@@ -1088,7 +1110,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				if (surfaceIsWater _missionFinish) then {
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _missionFinish;
-					private _unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _fuckingPOS, [], 3, "NONE"];
+					_unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
@@ -1107,7 +1129,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				if (surfaceIsWater _pos) then {
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
-					private _unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _fuckingPOS, [], 3, "NONE"];
+					_unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
@@ -1120,7 +1142,6 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
 				};	
 			};
-
 			{
 				_x setUnitPos "MIDDLE";
 				_x allowDamage false; //you don't want those dudes to get killed by roaming AI before you pick them up
@@ -1141,7 +1162,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				if (surfaceIsWater _pos) then {
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
-					private _unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _fuckingPOS, [], 3, "NONE"];
+					_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _fuckingPOS, [], 3, "NONE"];
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
@@ -1150,24 +1171,32 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 						_unit disableAI "PATH";
 					};
 				}else{	
-					_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _pos, [], 3, "NONE"];
+					if (_mission == "medevac") then {
+						_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _pos, [], 15, "NONE"];
+					}else {
+						_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _pos, [], 3, "NONE"];
+					};
 					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
 				};	
 			};
 			if (_mission == "medevac") then {
+				private _target = selectRandom (units _CIVinfGrp); //this one will need a real medical attention
+				_target setUnitPos "DOWN";
+				_target setVariable ["ace_isunconscious", true, true];
+				_target setUnconscious true;
 				{
-					//Medical stuff here or in a trigger. The trigger could call punishPunks so the patients get their injuries at the last moment and they don't bleedout before the chopper is there
-					_x setUnitPos selectRandom ["DOWN","MIDDLE"];
-					//_unconscious = selectRandom [true,false];
-					//if (count units _CIVinfGrp == 1) then {_unconscious = false};
-					//_x setVariable ["ace_isunconscious", _unconscious, true];
-					//_x setUnconscious _unconscious;
+					if (_x != _target) then {
+						//_x setUnitPos selectRandom ["DOWN","MIDDLE"];
+						_x disableAI "ANIM";
+						_x disableAI "TARGET";
+						_x disableAI "AUTOTARGET";
+						_x disableAI "MOVE";
+						[_x, (selectRandom ["Acts_CivilInjuredArms_1", "Acts_CivilInjuredChest_1", "Acts_CivilInjuredGeneral_1", "Acts_CivilInjuredHead_1", "Acts_CivilInjuredLegs_1", "Acts_SittingWounded_loop"])] remoteExec ["switchMove"];
+					};
 					_x setVariable ["lambs_danger_disableAI", true];//deactivate LambsDanger
 					removeAllItems _x;
 				}forEach units _CIVinfGrp;
-				private _target = selectRandom (units _CIVinfGrp);
-				_target setVariable ["ace_isunconscious", true, true];
-				_target setUnconscious true;
+				_objects = [_pos,"MEDEVAC"]call WMS_fnc_DFO_BuildBase;
 			}else{
 				_CIVinfGrp setFormation "FILE";
 				{
@@ -1268,6 +1297,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 	} else {
 		["EventCustom", ["Dynamic Flight Ops", (format ["%1 @ %2, %3min Timer",_missionName, ([round(_posLZ1 select 0), round(_posLZ1 select 1)]),round (_updatedTimer/60)]), "\A3\ui_f\data\map\MapControl\taskiconcreated_ca.paa"]] remoteExec ["BIS_fnc_showNotification", (owner _playerObject)];
 	};
+	{_objs pushBack _x}forEach _objects; //from MEDEVAC
 	//System/Management
 	WMS_DFO_LastCall = time;
 	WMS_DFO_Running pushback [time,_timeToDelete,_grps,_vhls,_objs,_mkrs,_cargoObject,"DFO",[_MissionHexaID,_playerObject,_mission,_MsnPathCoord,_missionName,_MissionFinish],_MissionHexaID];
@@ -1349,7 +1379,7 @@ WMS_fnc_DFO_CreateTrigger = {
 					_helper setPosASL [((getpos _helper) select 0), ((getpos _helper) select 1), (_pos select 2)+0.5];
 				};
 			};
-			if (WMS_DFO_HideLZTarget) then {
+			if (WMS_DFO_HideLZTarget || _mission == "medevac") then {
 				_helper setvectorup [0,0,-1]; //[0,0,-1] will turn the helper upsidedown and hide it (from the top)
 			} else {
 				_helper setvectorup [0,0,1];
@@ -1875,7 +1905,7 @@ WMS_fnc_DFO_PunishPunks = { //will be use to remind to those getting in the miss
 		if (isPlayer _playerObject) then {
 			[_playerObject, _maxDamage, _part, _projectiles, _playerObject] remoteExecCall ["ace_medical_fnc_addDamageToUnit",owner _playerObject];
 		} else {
-			[_playerObject, 0.5, _part, _projectiles, _playerObject] call ace_medical_fnc_addDamageToUnit;
+			[_playerObject, 0.3, _part, _projectiles, _playerObject] call ace_medical_fnc_addDamageToUnit;
 		};
 	} else {
 		//Bohemia:
@@ -1907,6 +1937,36 @@ WMS_fnc_DFO_JVMF = { //keep it for now, even if it doesn't do much
         case 3: {"MEDEVC"};
     */
 	_this call vtx_uh60_jvmf_fnc_attemptSendMessage;
+};
+WMS_fnc_DFO_injuriedGroup = {
+	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_injuriedGroup _this %1', _this]};
+	params [["_units", []]];
+	private _readyToGo = [];
+	/*{ //at spawn so they do not run around
+		_x disableAI "ANIM";
+		_x disableAI "TARGET";
+		_x disableAI "AUTOTARGET";
+		_x disableAI "MOVE";
+		[_x, (selectRandom ["Acts_CivilInjuredArms_1", "Acts_CivilInjuredChest_1", "Acts_CivilInjuredGeneral_1", "Acts_CivilInjuredHead_1", "Acts_CivilInjuredLegs_1", "Acts_SittingWounded_loop"])] remoteExec ["switchMove"];
+	} forEach _units;*/
+	uisleep 15;
+	while {({alive _x}count _units) > 0} do { //loop will stop at cleanup or all dead
+   		{
+			if (((damage _x) < 0.1) && {!(_x in _readyToGo)}) then {
+				[_x, "AinjPpneMstpSnonWnonDnon_kneel"] remoteExec ["switchMove"];
+				_x enableAI "ANIM";
+				_x enableAI "TARGET";
+				_x enableAI "AUTOTARGET";
+				_x enableAI "MOVE";
+				_x enableAI "PATH";
+				_x setUnitPos "AUTO";
+				uisleep 1;
+				[_x] orderGetIn true;
+				_readyToGo pushBack _x;
+			}
+    	} forEach _units;
+    sleep 3;
+	};
 };
 WMS_fnc_DFO_SetUnits = { //For Standalone but not only //will use regular loadout from unit classname
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_SetUnits _this %1', _this]};
@@ -2048,20 +2108,25 @@ WMS_fnc_DFO_infLoad = { //easy way: _unit moveInCargo _chopper;
 	{
 		if (alive _x) then {
 			_x assignAsCargo _vehiceObject;
-			_x setUnitPos "AUTO";
 			_x allowDamage true;
-			_x enableAI "PATH";
+			if (_mission == "medevac") then {
+				_x setVariable ["ace_medical_ai_lastFired", 9999999]; //prevent AI self healing
+				_x call WMS_fnc_DFO_PunishPunks;
+			}else {
+				_x enableAI "PATH";
+				_x setUnitPos "AUTO";
+			};
 		};
-		if (_mission == "medevac") then {_x call WMS_fnc_DFO_PunishPunks};
 	}forEach _Units;
+	if (_mission == "medevac") then {[_Units] spawn WMS_fnc_DFO_injuriedGroup};
 	if (surfaceIsWater (getPosATL _vehiceObject) && {(getPosATL (_units select 0)) select 2 > 0.1}) then {
 		{_x moveInCargo _vehiceObject}forEach _units; //teleport in the chopper
 	}else {
 		//if (side (_units select 0) == WEST ) then { //That would be "airassault"
-		if (false) then {
+		if !(_mission == "medevac") then {
 			{_x moveInAny _vehiceObject}forEach _units;
 		}else{
-			_Units orderGetIn true; //need room to land the chopper, in forest, you are fucked up
+			//_Units orderGetIn true; //need room to land the chopper, in forest, you are fucked up
 		};
 	};
 	_unitsDatas deleteAt _RefIndex;
@@ -2219,7 +2284,7 @@ WMS_fnc_DFO_Cleanup = {
 			if(_cntCIV == 0) then {_failed = true};
 		};
 		case "medevac": { //CANCELED
-			if(_cntCIV != 0 && {(getPosATL (leader (_grpCIV select 0))) distance _MissionFinish < 25}) then {_succes = true};
+			if(_cntCIV != 0 && {vehicle (leader (_grpCIV select 0)) == (leader (_grpCIV select 0))} && {(getPosATL (leader (_grpCIV select 0))) distance _MissionFinish < 25}) then {_succes = true};
 			if(_cntCIV == 0) then {_failed = true};
 		};
 	};
