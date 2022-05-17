@@ -27,8 +27,8 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v0.54_2022MAY15_GitHub";
-WMS_DynamicFlightOps	= true; //NOT 100% READY YET, 99%
+WAK_DFO_Version			= "v1.0_2022MAY17_GitHub";
+WMS_DynamicFlightOps	= true;
 WMS_fnc_DFO_LOGs		= true;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
@@ -982,6 +982,10 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 		_posLZ1 = [_pos] call WMS_fnc_DFO_ConvertTypeToCoord;
 	} else {
 		_posLZ1 = [_pos,_posType] call WMS_fnc_DFO_ConvertTypeToCoord;
+	};
+	uisleep 1;
+	if (_mission == "medevac" && {surfaceIsWater _posLZ1}) then { //MEDEVAC over water create very weird behaviors
+		_posLZ1 = [_pos] call WMS_fnc_DFO_ConvertTypeToCoord;
 	};
 	uisleep 1;
 	_MsnPathCoord pushBack _posLZ1;
