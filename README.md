@@ -1,6 +1,7 @@
 # WMS_DFO_Standalone
 v1.0_2022MAY17_GitHub<br/>
-	DFO Is nor ready
+
+	DFO Is now ready
 	
 v0.1_2022APR29_GitHub<br/>
 
