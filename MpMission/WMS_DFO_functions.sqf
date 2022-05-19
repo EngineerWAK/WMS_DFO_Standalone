@@ -27,9 +27,9 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use:
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v1.0_2022MAY17_GitHub";
+WAK_DFO_Version			= "v1.01_2022MAY19_GitHub";
 WMS_DynamicFlightOps	= true;
-WMS_fnc_DFO_LOGs		= true;	//For Debug
+WMS_fnc_DFO_LOGs		= false;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
 WMS_DFO_Reinforcement	= true; //Each mission has it's own type of reinforcement
@@ -45,7 +45,7 @@ WMS_DFO_MaxRunning		= 3; //Max missions can run in the same time
 WMS_DFO_CoolDown		= 600; //time before the next mission can be called
 WMS_DFO_Timer			= 1800; //timer before mission timeOut, no reset/extend
 WMS_DFO_MinMaxDist		= [3000,6000]; //minimum and maximum distance the next step of the mission will be, unless "custom" position like "forest","cities", etc...
-WMS_DFO_TriggMaxSpeed	= 18; //Maximum speed in the trigger to unlock the next level of the mission
+WMS_DFO_TriggMaxSpeed	= 18; //Maximum speed in the trigger to unlock the next level of the mission *1.5 for Medevac
 WMS_DFO_ReinfTriggDist	= 1000; //distance trigger will call reinforcement
 WMS_DFO_MkrRandomDist	= 500; //random distance to place the marker from SAR CSAR missions otherwise there is no "search"
 WMS_DFO_Reward			= [500,2000,['ACE_Can_Franta','ACE_Can_RedGull','ACE_MRE_LambCurry','ACE_MRE_MeatballsPasta','ACE_bloodIV_500','ACE_morphine','ACE_quikclot']]; //["rep","money",items for chopper return]
@@ -104,6 +104,7 @@ WMS_DFO_MissionPaths	= [["BASE","LZ1","BASE"],["BASE","LZ1","LZ2"]]; // "takeoff
 WMS_DFO_LastCall		= (time-WMS_DFO_CoolDown);
 WMS_DFO_Running			= []; //KEEP EMPTY
 WMS_DFO_RunReinforce	= []; //KEEP EMPTY
+//WMS_DFO_ToDelete		= []; //KEEP EMPTY //[timeToDelete,[objects]]
 
 WMS_DFO_AceIsRunning 	= false; //this should go in WMS_InfantryProgram
 
@@ -511,6 +512,11 @@ WMS_fnc_DFO_createBaseAction = {
 					_x call WMS_fnc_DFO_RinforceCleanup; //["HexaID", time to delete, [_grps], [_vhls], [_objects],"","","REINF"]
 				};
 			}forEach WMS_DFO_RunReinforce;
+			/*{
+				if (time >( _x select 0)) then {
+					{deleteVehicle _x}forEach _x select 1;
+				};
+			}forEach WMS_DFO_ToDelete;*/
 			uisleep 60;
 		};
 	};
@@ -1049,7 +1055,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				_target enableSimulation false;
 				_target setPos [worldSize,worldsize,-100];
 				_target setDamage 1;
-				_lootHolder = createVehicle ['groundWeaponSimulated', _chopperPos, [], 0, 'CAN_COLLIDE'];
+				_lootHolder = createVehicle ['WeaponHolderSimulated', _chopperPos, [], 0, 'CAN_COLLIDE'];
 				for '_i' from 1 to 6 do {
 					_lootHolder addItemCargoGlobal [selectRandom (WMS_DFO_Reward select 2),1];
 				};
@@ -1358,7 +1364,7 @@ WMS_fnc_DFO_CreateMkr = {
 };
 WMS_fnc_DFO_CreateTrigger = {
 	if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CreateTrigger _this %1', _this]};
-	private ["_triggerHeight","_triggSize","_triggList","_triggMission","_triggReinf","_mission","_MissionHexaID"];
+	private ["_triggerSpeed","_triggerHeight","_triggSize","_triggList","_triggMission","_triggReinf","_mission","_MissionHexaID"];
 	params [
 		"_pos",
 		["_triggType", "whatever"],
@@ -1370,7 +1376,8 @@ WMS_fnc_DFO_CreateTrigger = {
 	_MissionHexaID = _options select 0;
 	_triggSize = 12.5;
 	_triggerHeight = 15;
-	if (_mission == "medevac") then {_triggSize = 75; _triggerHeight = _triggSize;};
+	_triggerSpeed = WMS_DFO_TriggMaxSpeed;
+	if (_mission == "medevac") then {_triggSize = 75; _triggerHeight = _triggSize;_triggerSpeed = WMS_DFO_TriggMaxSpeed*1.5;};
 	if (_triggType isEqualTo "LZ1" || _triggType isEqualTo "BASE") then {
 		if (_mission == 'airassault') then {_options pushBack _airassaultDatas};
 		if !(_mission == "casinf" || _mission == "casarmored" || _mission == "cascombined") then { //CAS do not need trigger, the cleanup is every minute check and no RTB
@@ -1401,7 +1408,8 @@ WMS_fnc_DFO_CreateTrigger = {
 			};		
 			_triggMission setVariable ["WMS_DFO_triggData", _options, false];  
 			_triggMission setTriggerActivation ["ANYPLAYER", "PRESENT", true]; 
-			_triggMission setVariable ["WMS_DFO_triggerHeight", _triggerHeight, false];
+			_triggMission setVariable ["WMS_DFO_triggerHeight", _triggerHeight, false]; 
+			_triggMission setVariable ["WMS_DFO_triggerSpeed", _triggerSpeed, false];
 			_triggMission setTriggerArea [_triggSize, _triggSize, 0, false];
 			_triggMission setTriggerStatements  
 			[ 
@@ -1417,7 +1425,7 @@ WMS_fnc_DFO_CreateTrigger = {
 				{_UIDlist pushBack (getPlayerUID _x)}forEach thislist;
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_CreateTrigger _UIDlist %1', _UIDlist]};
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] DFO trigger LZ1 | MissionID %1 | Pilot %2 | Marker %3 | Mission %4 | Mission path %5 |', (_datas select 0), name (thislist select 0) , (_datas select 2), _mission, (_datas select 4)]};
-				if ((_pilotUID in _UIDlist) && {(vehicle (thislist select 0)) isKindOf 'Helicopter'} && {speed (vehicle (thislist select 0)) < WMS_DFO_TriggMaxSpeed}) then {
+				if ((_pilotUID in _UIDlist) && {(vehicle (thislist select 0)) isKindOf 'Helicopter'} && {speed (vehicle (thislist select 0)) < (thisTrigger getVariable 'WMS_DFO_triggerSpeed')}) then {
 					if(_mission == 'sar' || _mission == 'csar' || _mission == 'airassault' || _mission == 'inftransport' || _mission == 'medevac') then {
 						[(vehicle (thislist select 0)) , _pilot, (_datas select 0), _mission] call WMS_fnc_DFO_infLoad;
 					};
