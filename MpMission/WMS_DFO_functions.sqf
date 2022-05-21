@@ -1,5 +1,5 @@
 /**
-* WMS_DFO_functions.sqf - InfantryProgram
+* WMS_DFO_functions.sqf - Dynamic Flight Operations
 *
 * TNA-Community
 * https://discord.gg/Zs23URtjwF
@@ -23,11 +23,10 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 /*
 //for chill flight use:
 	WMS_DFO_Reinforcement	= false;
-	WMS_DFO_MissionTypes	= ["inftransport","cargotransport","sar"];
-//for maps like Livonia, Lythium, Weferlingen, use:
+//for maps like Livonia, Lythium, Weferlingen, use: //now set in WMS_DFO_NoSeaMaps
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v1.01_2022MAY19_GitHub";
+WAK_DFO_Version			= "v1.04_2022MAY21_GitHub";
 WMS_DynamicFlightOps	= true;
 WMS_fnc_DFO_LOGs		= false;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -116,6 +115,7 @@ publicVariable "WMS_DFO_UsePilotsList";
 publicVariable "WMS_DFO_PilotsList";
 publicVariable "WMS_DFO_MissionTypes";
 publicVariable "WMS_DFO_AceIsRunning";
+publicVariable "WMS_DFO_Reward";
 
 //STANDALONE MISSING VAR:
 if (WMS_DFO_Standalone) then {
@@ -750,6 +750,7 @@ WMS_fnc_DFO_CreateVhls = {
 			clearWeaponCargoGlobal _veh; 
 			clearItemCargoGlobal _veh; 
 			clearBackpackCargoGlobal _veh;
+			_veh setVariable ["WMS_HexaID",_MissionHexaID];
 		};
 		//vehicle crew
 		if (_faction != EAST) then {_infType = "CIV_ARMED"; _loadoutIndex = 1};
@@ -761,12 +762,12 @@ WMS_fnc_DFO_CreateVhls = {
 				if (surfaceIsWater (getPosATL _x)) then {
 					_fuckingPOS = ATLtoASL (getPosATL _x);
 					private _unit = _OPFORinfGrp createUnit [(WMS_DFO_NPCs select _loadoutIndex select 0), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",_faction];
 					_unit disableAI "PATH";
 				}else{	
 					_unit = _OPFORinfGrp createUnit [(WMS_DFO_NPCs select _loadoutIndex select 0), (getPosATL _x), [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",_faction];
 				};	
+				_unit setVariable ["WMS_RealFuckingSide",_faction];
+				_unit setVariable ["WMS_HexaID",_MissionHexaID];
 			};
 			_OPFORinfGrp addvehicle _x;
 			(units _OPFORinfGrp) orderGetIn true;
@@ -1121,7 +1122,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _missionFinish;
 					_unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
 						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_missionFinish select 2)+0.5];
@@ -1130,7 +1132,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					};
 				}else{	
 					_unit = _CIVinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 2)), _missionFinish, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 				};	
 			};
 			[_CIVinfGrp, _missionFinish, 75, 5, "MOVE", "CARELESS", "BLUE", "NORMAL", "DIAMOND", "", [1,2,3]] call CBA_fnc_taskPatrol;
@@ -1140,7 +1143,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
 					_unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
+					_unit setVariable ["WMS_RealFuckingSide",WEST];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
 						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_pos select 2)+0.5];
@@ -1149,7 +1153,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					};
 				}else{	
 					_unit = _CIVinfGrp2 createUnit [(selectRandom (WMS_DFO_NPCs select 1)), _pos, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",WEST];
+					_unit setVariable ["WMS_RealFuckingSide",WEST];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 				};	
 			};
 			{
@@ -1173,7 +1178,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Unit position overWater ! %1', _pos]};
 					_fuckingPOS = ATLtoASL _pos;
 					_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 					if ((getPosASL _unit )select 2 < 0) then {
 						if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_Event_DFO Moving Unit to the surface ! %1', _pos]};
 						_unit setPosASL [((getpos _unit) select 0), ((getpos _unit) select 1), (_pos select 2)+0.5];
@@ -1186,7 +1192,8 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 					}else {
 						_unit = _CIVinfGrp createUnit [(selectRandom _loadoutsCIV), _pos, [], 3, "NONE"];
 					};
-					_unit setVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_RealFuckingSide",CIVILIAN];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 				};	
 			};
 			if (_mission == "medevac") then {
@@ -1236,12 +1243,12 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				if (surfaceIsWater _missionFinish) then {
 					_fuckingPOS = ATLtoASL _missionFinish;
 					private _unit = _OPFORinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 0)), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
 					_unit disableAI "PATH";
 				}else{	
 					_unit = _OPFORinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 0)), [_missionFinish select 0,_missionFinish select 1,0], [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
-				};			
+				};
+				_unit setVariable ["WMS_RealFuckingSide",EAST];
+				_unit setVariable ["WMS_HexaID",_MissionHexaID];			
 			};
 			[_OPFORinfGrp] call CBA_fnc_taskDefend; //GARRISON
 		}else{
@@ -1249,12 +1256,12 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 				if (surfaceIsWater _pos) then { //works but messy	
 					_fuckingPOS = ATLtoASL _pos;
 					private _unit = _OPFORinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 0)), _fuckingPOS, [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
 					_unit disableAI "PATH";
 				}else{	
 					_unit = _OPFORinfGrp createUnit [(selectRandom (WMS_DFO_NPCs select 0)), [_pos select 0,_pos select 1,0], [], 3, "NONE"];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
-				};			
+				};
+				_unit setVariable ["WMS_RealFuckingSide",EAST];
+				_unit setVariable ["WMS_HexaID",_MissionHexaID];
 			};
 			[_OPFORinfGrp, _pos, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 		};
@@ -1727,6 +1734,10 @@ WMS_fnc_DFO_Reinforce = {
 				clearWeaponCargoGlobal _vehic;    
 				clearItemCargoGlobal _vehic;    
 				clearBackpackCargoGlobal _vehic;
+				{
+					_x setVariable ["WMS_RealFuckingSide",EAST];
+					_x setVariable ["WMS_HexaID",_MissionHexaID];
+				}forEach _units;
 				[_units,[_MissionHexaID,_playerObject,_mission,"OPFOR",_playerUID]] call WMS_fnc_DFO_SetUnits;
 				[_grp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce "AIRpatrol" %1', _vhl]};
@@ -1749,6 +1760,10 @@ WMS_fnc_DFO_Reinforce = {
 				clearWeaponCargoGlobal _vehic;    
 				clearItemCargoGlobal _vehic;    
 				clearBackpackCargoGlobal _vehic;
+				{
+					_x setVariable ["WMS_RealFuckingSide",EAST];
+					_x setVariable ["WMS_HexaID",_MissionHexaID];
+				}forEach _units;
 				[_units,[_MissionHexaID,_playerObject,_mission,"OPFOR",_playerUID]] call WMS_fnc_DFO_SetUnits;
 				[_grp, _pos, 300, 4, "MOVE", "AWARE", WMS_DFO_OPFORcbtMod, "LIMITED", "COLUMN", "", [2,4,6]] call CBA_fnc_taskPatrol;
 				if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_Reinforce "VHLpatrol" %1', _vhl]};
@@ -1757,7 +1772,8 @@ WMS_fnc_DFO_Reinforce = {
 				_OPFORinfGrp = createGroup [EAST, false];
 				for "_i" from 1 to (selectRandom [4,5,6,7,8]) do {
 					_unit = _OPFORinfGrp createUnit [selectRandom (WMS_DFO_NPCs select 0), [_pos select 0,_pos select 1,3000], [], 0, ""];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
+					_unit setVariable ["WMS_RealFuckingSide",EAST];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
 				};
 				[_OPFORinfGrp, _pos, 75, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 				{
@@ -1788,6 +1804,10 @@ WMS_fnc_DFO_Reinforce = {
 				clearWeaponCargoGlobal _vehic1;
 				clearItemCargoGlobal _vehic1;
 				clearBackpackCargoGlobal _vehic1;
+				{
+					_x setVariable ["WMS_RealFuckingSide",EAST];
+					_x setVariable ["WMS_HexaID",_MissionHexaID];
+				}forEach _units;
 				[_units1,[_MissionHexaID,_playerObject,_mission,"OPFOR",_playerUID]] call WMS_fnc_DFO_SetUnits;
 				_WPT_1 = _grp1 addWaypoint [_pos, 50];         
 				_WPT_1 setWaypointType "MOVE";  
@@ -1807,6 +1827,10 @@ WMS_fnc_DFO_Reinforce = {
 				clearWeaponCargoGlobal _vehic2;    
 				clearItemCargoGlobal _vehic2;    
 				clearBackpackCargoGlobal _vehic2;
+				{
+					_x setVariable ["WMS_RealFuckingSide",EAST];
+					_x setVariable ["WMS_HexaID",_MissionHexaID];
+				}forEach _units;
 				[_units2,[_MissionHexaID,_playerObject,_mission,"OPFOR",_playerUID]] call WMS_fnc_DFO_SetUnits;
 				_WPT_1b = _grp2 addWaypoint [_posLand, 25];  
 				_WPT_1b setWaypointType "TR UNLOAD";  
@@ -1819,7 +1843,9 @@ WMS_fnc_DFO_Reinforce = {
 				_grps pushBack _OPFORinfGrp;
 				for "_i" from 1 to (selectRandom [4,5,6,7,8]) do {
 					_unit = _OPFORinfGrp createUnit [selectRandom (WMS_DFO_NPCs select 0), _randomPos, [], 0, ""];
-					_unit setVariable ["WMS_DFO_RealFuckingSide",EAST];
+					_unit setVariable ["WMS_RealFuckingSide",EAST];
+					_unit setVariable ["WMS_HexaID",_MissionHexaID];
+				
 				};
 				[_OPFORinfGrp, _pos, 75, 4, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 				_units = units _OPFORinfGrp;
@@ -2187,7 +2213,7 @@ WMS_fnc_DFO_infUnLoad = { //easy way: moveOut _unit;
 		};
 	};
 	{
-		_RealFuckingSide = _x getVariable ["WMS_DFO_RealFuckingSide",CIVILIAN];
+		_RealFuckingSide = _x getVariable ["WMS_RealFuckingSide",CIVILIAN];
 		if (_RealFuckingSide == WEST && {_x == Leader _x})then {
 			[group _x, getPosATL _x, 100, 5, "MOVE", "AWARE", "RED", "NORMAL", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 			if (WMS_fnc_DFO_LOGs) then {diag_log format ['|WAK|TNA|WMS|[DFO] WMS_fnc_DFO_infUnLoad %1 leader group %2 is now patroling', _x,group _x]};
