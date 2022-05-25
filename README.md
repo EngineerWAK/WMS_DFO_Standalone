@@ -29,7 +29,7 @@ Call the mission from the screen, done.<br/>
 At this point you do not have a respawn system but it does the job.<br/>
 
 If you are building a mission.sqm:<br/>
-Place your DFO Mission Object (where to call mission from, for exemple "Land_TripodScreen_01_large_F") and in the init, add:<br/>
+Place your DFO Mission Object (where to call mission from, for example "Land_TripodScreen_01_large_F") and in the init, add:<br/>
 ```
 if(isServer)then{
 	private _ObjToAddAction = missionNameSpace getVariable ["WMS_DFO_ObjToAddAction", []];
