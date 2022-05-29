@@ -26,7 +26,7 @@ if (true)then {execVM "\DFO\WMS_DFO_functions.sqf"};
 //for maps like Livonia, Lythium, Weferlingen, use: //now set in WMS_DFO_NoSeaMaps
 	WMS_DFO_SarSeaPosition	= "random";
 */
-WAK_DFO_Version			= "v1.07_2022MAY22_GitHub";
+WAK_DFO_Version			= "v1.08_2022MAY28_GitHub";
 WMS_DynamicFlightOps	= true;
 WMS_DFO_LOGs			= false;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
@@ -35,7 +35,7 @@ WMS_DFO_Reinforcement	= true; //Each mission has it's own type of reinforcement
 WMS_DFO_UseJVMF			= true; //https://github.com/Project-Hatchet/H-60
 WMS_DFO_RemoveDup		= false; //delete dead NPC's primary weapon and backpack
 WMS_DFO_UsePilotsList 	= false; //if you want to limit DFO use to some players
-WMS_fnc_DFO_SmokeAtLZ	= true; //pop a smoke/flare on the group you have to pickUp //SAR and CSAR = false unless in water
+WMS_DFO_SmokeAtLZ		= true; //pop a smoke/flare on the group you have to pickUp //SAR and CSAR = false unless in water
 WMS_DFO_HideLZTarget	= true; //hide the target spawned at the LZ (actualy just return it, texture only on one side)
 WMS_DFO_InfUnlOverride	= false; //admins can force it "on the fly" in the console
 WMS_DFO_InfUnloadType 	= 3; //0: dump, 1: land, 2: rappel (Advanced Rappeling), 3: fastrope (not yet) //this should be dynamic unless override
@@ -942,7 +942,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createCIVinf	= true;
 			_CIVinfCount	= selectRandom [2,3,4,5,6,7,8];
 			_civType 		= selectRandom ["unarmed","armed"];
-			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_smokePickUp	= WMS_DFO_SmokeAtLZ;
 			_reinforce 		= selectRandom [false,true,false];
 			_selectedChoprs = WMS_DFO_Choppers select (selectRandom [1,1,1,2]);//[["pylons"],["doorGunners"],["transport"],["medevac"]];
 			if (_missionStart == "BASE") then {_missionFinish = _MissionPath select 1;_civType = "armed";} else {_missionFinish = _MissionPath select 2};
@@ -995,7 +995,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_createCIVinf 	= true; //not armed
 			_CIVinfCount	= selectRandom [2,3,4,5,6,7,8];
 			_reinforce 		= false;
-			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_smokePickUp	= WMS_DFO_SmokeAtLZ;
 			_selectedChoprs = WMS_DFO_Choppers select 3; //medevac
 		};
 		case "csar" : { //"LZ1"->"BASE"
@@ -1007,7 +1007,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_CIVinfCount	= selectRandom [2,3,4,5,6,7,8];
 			_createOPFORvhl = true; //light
 			_OPFORvhlType 	= [5,8];
-			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_smokePickUp	= WMS_DFO_SmokeAtLZ;
 			_reinforce 		= selectRandom [true,false];
 			_selectedChoprs = [WMS_DFO_Choppers select 1 select 0];
 		};
@@ -1020,7 +1020,7 @@ WMS_fnc_Event_DFO	= { //The one called by the addAction, filtered by WMS_DFO_Max
 			_OPFinfCount	= selectRandom [5,6,7,8,9,10];
 			_createOPFORvhl = true; //light/APC
 			_reinforce 		= false; //KEEP false for now or it will be a mess
-			_smokePickUp	= WMS_fnc_DFO_SmokeAtLZ;
+			_smokePickUp	= WMS_DFO_SmokeAtLZ;
 			_OPFORvhlType 	= [4,5,8];//[["AIR_HEAVY"],["AIR_LIGHT"],["AIR_UNARMED"],["HEAVY"],["APC"],["LIGHT"],["UNARMED"],["CIV"],["STATICS"]]
 			_selectedChoprs = WMS_DFO_Choppers select (selectRandom [0,0,1]);//[["pylons"],["doorGunners"],["transport"],["medevac"]];
 			if("LZ2" in _MissionPath) then {
@@ -2459,4 +2459,4 @@ if (WMS_DFO_Standalone) then {
 };
 uisleep 15;
 [] call WMS_fnc_DFO_createBaseAction;
-if (WMS_DFO_LOGs) then {'|WAK|TNA|WMS|[DFO] WMS_DFO_Functions, System Started'};
+if (true) then {format ['|WAK|TNA|WMS|[DFO] WMS_DFO_Functions, System Started, %1',WAK_DFO_Version]};
