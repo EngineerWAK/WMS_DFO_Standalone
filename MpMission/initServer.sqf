@@ -10,4 +10,4 @@
  */
  
 // Start DynamicFlightOps
-if (true)then {execVM "WMS_DFO_functions.sqf"};
+if (true)then {execVM "DFO\WMS_DFO_init.sqf"};
