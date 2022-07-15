@@ -32,6 +32,7 @@ if (WMS_DFO_AceIsRunning)then{
 		(alive player) &&
 		//{(getPlayerUID player) in WMS_DFO_PilotsList} && //remove this if you don't use pilot list
 		{vehicle player isKindOf "helicopter"} &&
+		{!(vehicle player isKindOf "B_Parachute")} &&
 		{count WMS_DFO_BasePositions != 0} &&
 		{count WMS_DFO_ObjToAddAction != 0} &&
 		{(count WMS_DFO_Running) < WMS_DFO_MaxRunning} &&
@@ -56,6 +57,7 @@ if (WMS_DFO_AceIsRunning)then{
 		(alive player) &&
 		//{(getPlayerUID player) in WMS_DFO_PilotsList} && //remove this if you don't use pilot list
 		{vehicle player isKindOf "helicopter"} &&
+		{!(vehicle player isKindOf "B_Parachute")} &&
 		{count WMS_DFO_BasePositions != 0} &&
 		{count WMS_DFO_ObjToAddAction != 0} &&
 		{(count WMS_DFO_Running) < WMS_DFO_MaxRunning} &&
@@ -80,6 +82,7 @@ if (WMS_DFO_AceIsRunning)then{
 		(alive player) &&
 		//{(getPlayerUID player) in WMS_DFO_PilotsList} && //remove this if you don't use pilot list
 		{vehicle player isKindOf "helicopter"} &&
+		{!(vehicle player isKindOf "B_Parachute")} &&
 		{count WMS_DFO_BasePositions != 0} &&
 		{count WMS_DFO_ObjToAddAction != 0} &&
 		{(count WMS_DFO_Running) < WMS_DFO_MaxRunning} &&

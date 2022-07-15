@@ -20,7 +20,7 @@
 	// Start DynamicFlightOps
 	if (true)then {execVM "\DFO\WMS_DFO_init.sqf"};
 */
-WAK_DFO_Version			= "v1.11_2022JUN07_GitHub";
+WAK_DFO_Version			= "v1.12_2022JUN13_GitHub"; //No bohemia, a parachute is definitely not an Helicopter.
 WMS_DynamicFlightOps	= true;
 WMS_DFO_LOGs			= false;	//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
