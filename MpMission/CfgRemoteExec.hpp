@@ -35,6 +35,14 @@ class CfgRemoteExec
 		class vtx_uh60_jvmf_fnc_receiveReply			{ allowedTargets=0; };
 		class vtx_uh60_mfd_fnc_switchpage				{ allowedTargets=0; };
 		class vtx_uh60_engine_fnc_engineEH				{ allowedTargets=0; };
+
+		class vtx_uh60_mfd_fnc_setpylonvalue			{ allowedTargets=0; };
+		class vtx_uh60_flir_fnc_syncpilotcamera			{ allowedTargets=0; };
+		class vtx_uh60_flir_fnc_setVisionMode			{ allowedTargets=0; };
+		class vtx_uh60_flir_fnc_setFOV					{ allowedTargets=0; };
+		class vtx_uh60_weapons_fnc_updatePylonAssignment{ allowedTargets=0; };
+		class vtx_uh60_mfd_fnc_tac_sync					{ allowedTargets=0; };
+		class vtx_uh60_weapons_fnc_interaction			{ allowedTargets=0; };
 	};
 	class Commands
 	{

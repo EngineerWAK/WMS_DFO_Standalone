@@ -20,9 +20,9 @@
 	// Start DynamicFlightOps
 	if (true)then {execVM "\DFO\WMS_DFO_init.sqf"};
 */
-WAK_DFO_Version			= "v1.12_2022JUN13_GitHub"; //No bohemia, a parachute is definitely not an Helicopter.
+WAK_DFO_Version			= "v1.14_2022OCT18_GitHub"; //No bohemia, a parachute is definitely not an Helicopter.
 WMS_DynamicFlightOps	= true;
-WMS_DFO_LOGs			= false;	//For Debug
+WMS_DFO_LOGs			= false;//For Debug
 WMS_DFO_Standalone		= true; //keep true if you don't use WMS_InfantryProgram
 WMS_DFO_CreateChopper	= true; //if your mission file doesn't have choppers available
 WMS_DFO_Reinforcement	= true; //Each mission has it's own type of reinforcement
@@ -70,12 +70,7 @@ WMS_DFO_NPCs			= [ //[[OPFOR],[CIV_SOLDIER],[CIV]] //mainly for standalone versi
 						["C_Man_Paramedic_01_F","C_Man_UtilityWorker_01_F","C_journalist_F","C_Man_Fisherman_01_F","C_man_polo_1_F","C_Man_casual_1_F_afro_sick"]];
 */
 //RHS/HATCHET
-WMS_DFO_Choppers		= [
-						["vtx_MH60M_DAP","vtx_MH60S_Pylons"], //["pylons"]
-						["vtx_HH60","vtx_MH60S_GAU21L","vtx_MH60M","vtx_MH60S","vtx_UH60M"], //["doorGunners"] //GAU21L ONLY 5 cargo positions
-						["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"], //["transport"] //SLICK ONLY 4 cargo positions //"transport" will be used mainly for crates
-						["vtx_UH60M_MEDEVAC"] //["medevac"]
-						];//Hatchet
+WMS_DFO_Choppers		= [["vtx_MH60M_DAP","vtx_MH60M_DAP_MLASS"],["vtx_HH60","vtx_MH60M","vtx_UH60M"],["B_Heli_Transport_03_unarmed_F","vtx_UH60M_SLICK"],["vtx_UH60M_MEDEVAC"]];//Hatchet
 WMS_DFO_NPCvehicles		= [//[[AIR_HEAVY],[AIR_LIGHT],[AIR_UNARMED],[HEAVY],[APC],[LIGHT],[UNARMED],[CIV],[STATICS],["BOATS"]]
 						["RHS_Ka52_vvsc","RHS_Mi24V_vvsc","RHS_Mi8MTV3_vvsc"],
 						["RHS_Mi24Vt_vvsc","RHS_Mi8mt_vvsc"],
